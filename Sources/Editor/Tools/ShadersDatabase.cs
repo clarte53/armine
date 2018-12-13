@@ -27,7 +27,7 @@ namespace Armine.Editor.Tools
 
 		#region Members
 		private const string resourceFileName = Constants.shaderDatabase + ".txt";
-		private const string resourceFilePath = "Armine/Armine/Resources/";
+		private const string resourceFilePath = "Modules/Armine/Armine/Resources/";
 		private const string downloadURL = "https://unity3d.com/get-unity/download/archive";
 		private const string regexURL = @"(https?:\/\/[\w\/.-]+\/[0-9a-f]{12}\/)builtin_shaders-(\d+\.\d+\.\d+\w\d+)[\w\/.-]+";
 		private const string regexShader = @"^\s*Shader\s+""([\w+\/.-]+)""";

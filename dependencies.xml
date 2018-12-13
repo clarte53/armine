@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<DependenciesList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<name>armine</name>
+	<dependencies>
+		<DependencyDesc>
+			<address>ssh://git@gitlab.clarte.asso.fr:53000/modules/clarte-utils.git</address>
+			<commitId>8645b7d0fff7a640b0b1161d3bfcfe89380608dc</commitId>
+		</DependencyDesc>
+	</dependencies>
+</DependenciesList>

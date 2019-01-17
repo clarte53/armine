@@ -133,6 +133,11 @@ namespace Armine.Editor.Tools
 			{
 				yield return web_page.SendWebRequest();
 
+                while(!web_page.isDone)
+                {
+                    yield return web_page;
+                }
+
 				if(string.IsNullOrEmpty(web_page.error))
 				{
 					Regex regex = new Regex(regexURL);
@@ -173,7 +178,12 @@ namespace Armine.Editor.Tools
 				{
 					yield return zip_resource.SendWebRequest();
 
-					if(string.IsNullOrEmpty(zip_resource.error))
+                    while(!zip_resource.isDone)
+                    {
+                        yield return zip_resource;
+                    }
+
+                    if(string.IsNullOrEmpty(zip_resource.error))
 					{
 						File.WriteAllBytes(file, zip_resource.downloadHandler.data);
 					}

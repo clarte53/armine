@@ -94,9 +94,7 @@ namespace Armine.Editor.Tools
 			//TODO: not working!
 			//UnityEngine.Object prefab_object = (GameObject) AssetDatabase.LoadAssetAtPath(path + prefab_name, typeof(GameObject));
 			
-			UnityEngine.Object prefab_object = PrefabUtility.CreateEmptyPrefab(path + prefab_name);
-		
-			GameObject prefab = PrefabUtility.ReplacePrefab(root, prefab_object, ReplacePrefabOptions.ConnectToPrefab);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(root, path + prefab_name, InteractionMode.AutomatedAction);
 
 			mapping.Clear();
 

@@ -7,6 +7,7 @@ using Armine.Shaders;
 using ICSharpCode.SharpZipLib.Zip;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Armine.Editor.Tools
 {
@@ -128,18 +129,15 @@ namespace Armine.Editor.Tools
 
 		private static IEnumerator DownloadBuiltinShaders(HashSet<ShaderName> shaders)
 		{
-			using(WWW web_page = new WWW(downloadURL))
+			using(UnityWebRequest web_page = UnityWebRequest.Get(downloadURL))
 			{
-				while(!web_page.isDone)
-				{
-					yield return web_page;
-				}
+				yield return web_page.SendWebRequest();
 
 				if(string.IsNullOrEmpty(web_page.error))
 				{
 					Regex regex = new Regex(regexURL);
 
-					MatchCollection matches = regex.Matches(web_page.text);
+					MatchCollection matches = regex.Matches(web_page.downloadHandler.text);
 
 					foreach(Match match in matches)
 					{
@@ -171,16 +169,13 @@ namespace Armine.Editor.Tools
 
 			if(!File.Exists(file))
 			{
-				using(WWW zip_resource = new WWW(uri.ToString()))
+				using(UnityWebRequest zip_resource = UnityWebRequest.Get(uri.ToString()))
 				{
-					while(!zip_resource.isDone)
-					{
-						yield return zip_resource;
-					}
+					yield return zip_resource.SendWebRequest();
 
 					if(string.IsNullOrEmpty(zip_resource.error))
 					{
-						File.WriteAllBytes(file, zip_resource.bytes);
+						File.WriteAllBytes(file, zip_resource.downloadHandler.data);
 					}
 					else
 					{

@@ -10,6 +10,7 @@ namespace Armine.Model.Type
     public sealed partial class UnityComponent
     {
         #region Members
+        private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
         private static Dictionary<Component, UnityComponent> components = new Dictionary<Component, UnityComponent>();
         #endregion
 
@@ -37,7 +38,7 @@ namespace Armine.Model.Type
 
                 components[component] = result;                
 
-                FieldInfo[] members = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo[] members = type.GetFields(flags);
 
                 foreach(FieldInfo member in members)
                 {
@@ -56,7 +57,7 @@ namespace Armine.Model.Type
                     }
                 }
 
-                PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                PropertyInfo[] properties = type.GetProperties(flags);
 
                 foreach(PropertyInfo property in properties)
                 {
@@ -106,7 +107,7 @@ namespace Armine.Model.Type
                 {
                     foreach(KeyValuePair<string, object> pair in fields)
                     {
-                        FieldInfo member = type.GetField(pair.Key);
+                        FieldInfo member = type.GetField(pair.Key, flags);
 
                         if(member != null)
                         {
@@ -123,7 +124,7 @@ namespace Armine.Model.Type
                 {
                     foreach(KeyValuePair<string, object> pair in properties)
                     {
-                        PropertyInfo property = type.GetProperty(pair.Key);
+                        PropertyInfo property = type.GetProperty(pair.Key, flags);
 
                         if(property != null)
                         {

@@ -95,6 +95,8 @@ namespace Armine.Model.Type
 				scene.unityMaterials = new Dictionary<UnityEngine.Material, int>();
 				scene.unityTextures = new Dictionary<Texture2D, int>();
 
+                UnityComponent.ClearMapping();
+
 				uint nb_nodes = CountNodes(root.transform);
 
 				Utils.Progress progress = new Utils.Progress();
@@ -175,9 +177,10 @@ namespace Armine.Model.Type
 				scene.unityMeshes = null;
 				scene.unityMaterials = null;
 				scene.unityTextures = null;
+                UnityComponent.ClearMapping();
 
-				// Return the result
-				callback(scene);
+                // Return the result
+                callback(scene);
 			}
 		}
 		#endregion

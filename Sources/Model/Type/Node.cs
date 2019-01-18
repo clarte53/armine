@@ -21,6 +21,7 @@ namespace Armine.Model.Type
 		private Vector3 scale = Vector3.one;
 		private Node[] children = null;
 		private GraphicMesh[] meshes = null;
+        private UnityComponent[] components = null;
 		private Metadata metadata = null;
 		#endregion
 

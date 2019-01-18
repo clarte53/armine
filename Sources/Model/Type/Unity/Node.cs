@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Armine.Utils;
 using CLARTE.Serialization;
 using UnityEngine;
@@ -42,6 +43,12 @@ namespace Armine.Model.Type
 				current.scale = node.localScale;
 				current.metadata = Metadata.FromUnity(node.gameObject);
 
+                // Handle components
+                current.components = node.gameObject.GetComponents<Component>()
+                    .Where(SerializedComponent)
+                    .Select(UnityComponent.FromUnity)
+                    .ToArray();
+
 				// Handle meshes and materials
 				List<GraphicMesh> graphic_meshes = new List<GraphicMesh>();
 
@@ -65,7 +72,7 @@ namespace Armine.Model.Type
 				{
 					Dictionary<string, HashSet<Transform>> children_sorted = new Dictionary<string, HashSet<Transform>>();
 
-					// Group all children by hash, i.e. same name, transform and metadata
+					// Group all children by hash, i.e. same name, transform, components and metadata
 					foreach(Transform child in node)
 					{
 						HashSet<Transform> set;
@@ -157,6 +164,13 @@ namespace Armine.Model.Type
 				}
 			}
 		}
+
+        private static bool SerializedComponent(Component component)
+        {
+            System.Type type = component.GetType();
+
+            return !typeof(Transform).IsAssignableFrom(type) && !typeof(MeshFilter).IsAssignableFrom(type) && !typeof(MeshRenderer).IsAssignableFrom(type) && !typeof(Model.Metadata).IsAssignableFrom(type);
+        }
 
 		private static void FromUnityMeshAndMaterials(Scene scene, Transform node, ref List<GraphicMesh> graphic_meshes)
 		{
@@ -348,6 +362,15 @@ namespace Armine.Model.Type
 				metadata.ToUnity(go);
 			}
 
+            // Add components
+            if(components != null && components.Length > 0)
+            {
+                foreach(UnityComponent component in components)
+                {
+                    component.ToUnity(go);
+                }
+            }
+
 			return go;
 		}
 		#endregion
@@ -367,6 +390,14 @@ namespace Armine.Model.Type
 			}
 			// No need to add something to know wether meta is defined or not: the data will never
 			// be deserialized. It's only function is to serve to compute the comparison hash.
+
+            foreach(Component component in trans.GetComponents<Component>())
+            {
+                if(SerializedComponent(component))
+                {
+                    written += Module.Import.Binary.serializer.ToBytes(ref buffer, written, UnityComponent.FromUnity(component));
+                }
+            }
 
 			uint size = (uint) System.Text.Encoding.UTF8.GetByteCount(name);
 			size += 2 * Binary.Size(Binary.SupportedTypes.VECTOR3);

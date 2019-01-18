@@ -9,43 +9,23 @@ namespace Armine.Model.Type
 {
     public sealed partial class UnityComponent
     {
-        #region Members
-        private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-        private static Dictionary<Component, UnityComponent> components = new Dictionary<Component, UnityComponent>();
-        #endregion
-
-        #region Utility methods
-        public static void ClearMapping()
+        private partial interface IBackend
         {
-            components.Clear();
+            void FromUnity(Component component, System.Type type);
+            void ToUnity(Component component, System.Type type);
         }
-        #endregion
 
-        #region Import
-        public static UnityComponent FromUnity(Component component)
+        private partial class BackendGeneric
         {
-            UnityComponent result = null;
-
-            if(component != null && !components.TryGetValue(component, out result))
+            #region Import
+            public void FromUnity(Component component, System.Type type)
             {
-                System.Type type = component.GetType();
+                fields = new Dictionary<string, object>();
+                properties = new Dictionary<string, object>();
 
-                result = new UnityComponent();
+                FieldInfo[] class_fields = type.GetFields(flags);
 
-                result.type = type;
-                result.fields = new Dictionary<string, object>();
-                result.properties = new Dictionary<string, object>();
-
-                if(component is ISerializationCallbackReceiver)
-                {
-                    ((ISerializationCallbackReceiver) component).OnBeforeSerialize();
-                }
-
-                components[component] = result;                
-
-                FieldInfo[] members = type.GetFields(flags);
-
-                foreach(FieldInfo member in members)
+                foreach(FieldInfo member in class_fields)
                 {
                     if(DoSerialization(member, () => member.IsPublic))
                     {
@@ -53,7 +33,7 @@ namespace Armine.Model.Type
                         {
                             Binary.GetSupportedType(member.FieldType);
 
-                            result.fields.Add(member.Name, member.GetValue(component));
+                            fields.Add(member.Name, member.GetValue(component));
                         }
                         catch(ArgumentException)
                         {
@@ -62,9 +42,9 @@ namespace Armine.Model.Type
                     }
                 }
 
-                PropertyInfo[] properties = type.GetProperties(flags);
+                PropertyInfo[] class_properties = type.GetProperties(flags);
 
-                foreach(PropertyInfo property in properties)
+                foreach(PropertyInfo property in class_properties)
                 {
                     if(property.GetIndexParameters().Length == 0)
                     {
@@ -77,7 +57,7 @@ namespace Armine.Model.Type
                             {
                                 Binary.GetSupportedType(property.PropertyType);
 
-                                result.properties.Add(property.Name, property.GetValue(component, null));
+                                properties.Add(property.Name, property.GetValue(component, null));
                             }
                             catch(ArgumentException)
                             {
@@ -91,22 +71,10 @@ namespace Armine.Model.Type
                     }
                 }
             }
+            #endregion
 
-            return result;
-        }
-        #endregion
-
-        #region Export
-        public void ToUnity(GameObject go)
-        {
-            Component component = go.GetComponent(type);
-
-            if(component == null)
-            {
-                component = go.AddComponent(type);
-            }
-
-            if(component != null)
+            #region Export
+            public void ToUnity(Component component, System.Type type)
             {
                 if(fields != null)
                 {
@@ -141,6 +109,127 @@ namespace Armine.Model.Type
                         }
                     }
                 }
+            }
+            #endregion
+
+            #region Utility methods
+            private static bool DoSerialization(MethodInfo method)
+            {
+                if(method != null)
+                {
+                    var attributes = method.GetCustomAttributes(true);
+
+                    return (method.IsPublic || attributes.Any(x => x is SerializeField)) && !attributes.Any(x => x is NonSerializedAttribute);
+                }
+
+                return false;
+            }
+
+            private static bool DoSerialization(MemberInfo member, Func<bool> public_callback)
+            {
+                if(member != null)
+                {
+                    var attributes = member.GetCustomAttributes(true);
+
+                    return (public_callback() || attributes.Any(x => x is SerializeField)) && !attributes.Any(x => x is NonSerializedAttribute);
+                }
+
+                return false;
+            }
+            #endregion
+        }
+
+        private partial class BackendBinarySerializable
+        {
+            #region Import
+            public void FromUnity(Component component, System.Type type)
+            {
+                Binary.Buffer buffer = null;
+
+                try
+                {
+                    buffer = Module.Import.Binary.serializer.GetBuffer(1024);
+
+                    uint written = Module.Import.Binary.serializer.ToBytes(ref buffer, 0, component as IBinarySerializable);
+
+                    serialized = new byte[written];
+
+                    Array.Copy(buffer.Data, serialized, written);
+                }
+                finally
+                {
+                    if(buffer != null)
+                    {
+                        buffer.Dispose();
+                    }
+                }
+            }
+            #endregion
+
+            #region Export
+            public void ToUnity(Component component, System.Type type)
+            {
+                using(Binary.Buffer buffer = Module.Import.Binary.serializer.GetBufferFromExistingData(serialized))
+                {
+                    Module.Import.Binary.serializer.FromBytesOverwrite(buffer, 0, component as IBinarySerializable);
+                }
+            }
+            #endregion
+        }
+
+        #region Members
+        private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        private static Dictionary<Component, UnityComponent> components = new Dictionary<Component, UnityComponent>();
+        #endregion
+
+        #region Utility methods
+        public static void ClearMapping()
+        {
+            components.Clear();
+        }
+        #endregion
+
+        #region Import
+        public static UnityComponent FromUnity(Component component)
+        {
+            UnityComponent result = null;
+
+            if(component != null && !components.TryGetValue(component, out result))
+            {
+                System.Type type = component.GetType();
+
+                result = new UnityComponent();
+
+                result.type = type;
+                result.CreateBackend();
+
+                components[component] = result;
+
+                if(component is ISerializationCallbackReceiver)
+                {
+                    ((ISerializationCallbackReceiver) component).OnBeforeSerialize();
+                }
+
+                result.backend.FromUnity(component, result.type);
+            }
+
+            return result;
+        }
+        #endregion
+
+        #region Export
+        public void ToUnity(GameObject go)
+        {
+            Component component = go.GetComponent(type);
+
+            if(component == null)
+            {
+                component = go.AddComponent(type);
+            }
+
+            if(component != null)
+            {
+                backend.ToUnity(component, type);
 
                 if(component is ISerializationCallbackReceiver)
                 {
@@ -151,32 +240,6 @@ namespace Armine.Model.Type
             {
                 Debug.LogErrorFormat("Can not add component of type '{0}' to GameObject '{1}'. Component will not be deserialized.", type, go.name);
             }
-        }
-        #endregion
-
-        #region Utility methods
-        private static bool DoSerialization(MethodInfo method)
-        {
-            if(method != null)
-            {
-                var attributes = method.GetCustomAttributes(true);
-
-                return (method.IsPublic || attributes.Any(x => x is SerializeField)) && !attributes.Any(x => x is NonSerializedAttribute);
-            }
-
-            return false;
-        }
-
-        private static bool DoSerialization(MemberInfo member, Func<bool> public_callback)
-        {
-            if(member != null)
-            {
-                var attributes = member.GetCustomAttributes(true);
-
-                return (public_callback() || attributes.Any(x => x is SerializeField)) && !attributes.Any(x => x is NonSerializedAttribute);
-            }
-
-            return false;
         }
         #endregion
     }

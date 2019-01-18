@@ -36,6 +36,11 @@ namespace Armine.Model.Type
                 result.fields = new Dictionary<string, object>();
                 result.properties = new Dictionary<string, object>();
 
+                if(component is ISerializationCallbackReceiver)
+                {
+                    ((ISerializationCallbackReceiver) component).OnBeforeSerialize();
+                }
+
                 components[component] = result;                
 
                 FieldInfo[] members = type.GetFields(flags);
@@ -135,6 +140,11 @@ namespace Armine.Model.Type
                             Debug.LogErrorFormat("Missing property '{0}' in component of type '{1}'. Property will not be deserialized.", pair.Key, type);
                         }
                     }
+                }
+
+                if(component is ISerializationCallbackReceiver)
+                {
+                    ((ISerializationCallbackReceiver) component).OnAfterDeserialize();
                 }
             }
             else

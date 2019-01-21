@@ -51,8 +51,12 @@ namespace Armine.Model.Type
 				// Save material enabled passes
 				for(int i = 0; i < material.passes.Length; i++)
 				{
+#if UNITY_5_6_OR_NEWER
 					material.passes[i] = unity_material.GetShaderPassEnabled(unity_material.GetPassName(i));
-				}
+#else
+                    material.passes[i] = true;
+#endif
+                }
 
 				// Save material properties
 				// Range properties in Unity are fucked-up. It can be either int or float values, and their is no way to know wich one it is.
@@ -133,7 +137,9 @@ namespace Armine.Model.Type
 					{
 						for(int i = 0; i < passes.Length; i++)
 						{
+#if UNITY_5_6_OR_NEWER
 							unityMaterial.SetShaderPassEnabled(unityMaterial.GetPassName(i), passes[i]);
+#endif
 						}
 					}
 

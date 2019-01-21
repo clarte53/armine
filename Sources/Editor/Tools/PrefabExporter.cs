@@ -90,13 +90,17 @@ namespace Armine.Editor.Tools
 				UnityEngine.Object.DestroyImmediate(info);
 			}
 
-			// Load the prefab if it exist to avoid breaking links with objects referencing this prefab
-			//TODO: not working!
-			//UnityEngine.Object prefab_object = (GameObject) AssetDatabase.LoadAssetAtPath(path + prefab_name, typeof(GameObject));
-			
-            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(root, path + prefab_name, InteractionMode.AutomatedAction);
+            // Load the prefab if it exist to avoid breaking links with objects referencing this prefab
+            //TODO: not working!
+            //UnityEngine.Object prefab_object = (GameObject) AssetDatabase.LoadAssetAtPath(path + prefab_name, typeof(GameObject));
 
-			mapping.Clear();
+#if UNITY_2018_3_OR_NEWER
+            GameObject prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(root, path + prefab_name, InteractionMode.AutomatedAction);
+#else
+            UnityEngine.Object prefab_object = PrefabUtility.CreateEmptyPrefab(path + prefab_name);
+            GameObject prefab = PrefabUtility.ReplacePrefab(root, prefab_object, ReplacePrefabOptions.ConnectToPrefab);
+#endif
+            mapping.Clear();
 
 			CorrectBrokenLinks(root, prefab, path + prefab_name);
 

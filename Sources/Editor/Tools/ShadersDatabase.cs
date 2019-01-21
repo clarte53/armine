@@ -131,7 +131,11 @@ namespace Armine.Editor.Tools
 		{
 			using(UnityWebRequest web_page = UnityWebRequest.Get(downloadURL))
 			{
+#if UNITY_2017_2_OR_NEWER
 				yield return web_page.SendWebRequest();
+#else
+                yield return web_page.Send();
+#endif
 
                 while(!web_page.isDone)
                 {
@@ -176,7 +180,11 @@ namespace Armine.Editor.Tools
 			{
 				using(UnityWebRequest zip_resource = UnityWebRequest.Get(uri.ToString()))
 				{
+#if UNITY_2017_2_OR_NEWER
 					yield return zip_resource.SendWebRequest();
+#else
+                    yield return zip_resource.Send();
+#endif
 
                     while(!zip_resource.isDone)
                     {

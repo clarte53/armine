@@ -7,6 +7,14 @@ namespace Armine.Model
 	[Serializable]
 	public class Info : MonoBehaviour, ISerializationCallbackReceiver
 	{
+        [Serializable]
+        public struct Mapping
+        {
+            public GameObject go;
+            public uint id;
+            public int part;
+        }
+
 		#region Members
 		public string filename;
 		public int vertices;
@@ -22,7 +30,7 @@ namespace Armine.Model
 		private string durationStr;
 
 		[SerializeField]
-		private List<List<GameObject>> idsValues;
+		private List<Mapping> idsValues;
 		
 		#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 		public Option.Import options;
@@ -51,14 +59,17 @@ namespace Armine.Model
 			{
 				if(idsValues == null)
 				{
-					idsValues = new List<List<GameObject>>(ids.Count);
+					idsValues = new List<Mapping>(ids.Count);
 				}
 
 				idsValues.Clear();
 
-				for(int i = 0; i < ids.Count; i++)
+				for(uint i = 0; i < ids.Count; i++)
 				{
-					idsValues.Insert(i, ids[(uint) i]);
+                    for(int j = 0; j < ids[i].Count; j++)
+                    {
+                        idsValues.Add(new Mapping { go = ids[i][j], id = i, part = j });
+                    }
 				}
 			}
 
@@ -71,9 +82,20 @@ namespace Armine.Model
 			{
 				ids = new Dictionary<uint, List<GameObject>>();
 			
-				for(int i = 0; i != idsValues.Count; i++)
+				for(uint i = 0; i < idsValues.Count; i++)
 				{
-					ids.Add((uint) i, idsValues[i]);
+                    Mapping mapping = idsValues[(int) i];
+
+                    List<GameObject> list;
+
+                    if(!ids.TryGetValue(mapping.id, out list))
+                    {
+                        list = new List<GameObject>();
+
+                        ids[mapping.id] = list;
+                    }
+
+                    list.Insert(mapping.part, mapping.go);
 				}
 
 				idsValues.Clear();

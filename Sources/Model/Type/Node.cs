@@ -8,9 +8,10 @@ namespace Armine.Model.Type
 		{
 			public int meshIndex = -1;
 			public int[] materialsIndexes = null;
-		} 
+		}
 
-		#region Members
+        #region Members
+        private uint id;
 		private string name = null;
 		private string tag = null;
 		private int layer = 0;

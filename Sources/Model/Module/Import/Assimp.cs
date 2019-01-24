@@ -42,6 +42,7 @@ namespace Armine.Model.Module.Import
 			public Type.Scene scene;
 			public string filename;
 			public string path;
+            public uint id;
 			#endregion
 
 			#region Constructors
@@ -64,7 +65,9 @@ namespace Armine.Model.Module.Import
 
 				scene = null;
 
-				progress.Clean();
+                id = 0;
+
+                progress.Clean();
 			}
 			#endregion
 		}

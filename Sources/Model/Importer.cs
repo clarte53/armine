@@ -298,7 +298,7 @@ namespace Armine.Model
 								faces_loaded += mesh.FacesCount;
 							}
 
-							scene.UnityRoot.AddComponent<Info>().Init(filename, end.Subtract(start), vertices_loaded, faces_loaded, scene.UnityMapping);
+							scene.UnityRoot.AddComponent<Info>().Init(filename, end.Subtract(start), vertices_loaded, faces_loaded, scene.IdMapping.Id2Go);
 						}
 
 						if(return_callback != null)

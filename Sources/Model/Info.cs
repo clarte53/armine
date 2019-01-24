@@ -9,16 +9,20 @@ namespace Armine.Model
 	{
 		#region Members
 		public string filename;
-		public TimeSpan duration;
 		public int vertices;
 		public int faces;
-		public Dictionary<uint, GameObject> ids;
+
+        [NonSerialized]
+        public TimeSpan duration;
+
+        [NonSerialized]
+        public Dictionary<uint, List<GameObject>> ids;
 
 		[SerializeField]
 		private string durationStr;
 
 		[SerializeField]
-		private List<GameObject> idsValues;
+		private List<List<GameObject>> idsValues;
 		
 		#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 		public Option.Import options;
@@ -26,7 +30,7 @@ namespace Armine.Model
 		#endregion
 		
 		#region Constructors
-		public void Init(string file, TimeSpan loading_duration, int vertices_loaded, int faces_loaded, Dictionary<uint, GameObject> id_mapping)
+		public void Init(string file, TimeSpan loading_duration, int vertices_loaded, int faces_loaded, Dictionary<uint, List<GameObject>> id_mapping)
 		{
 			filename = file;
 			duration = loading_duration;
@@ -47,7 +51,7 @@ namespace Armine.Model
 			{
 				if(idsValues == null)
 				{
-					idsValues = new List<GameObject>(ids.Count);
+					idsValues = new List<List<GameObject>>(ids.Count);
 				}
 
 				idsValues.Clear();
@@ -65,7 +69,7 @@ namespace Armine.Model
 		{
 			if(idsValues != null)
 			{
-				ids = new Dictionary<uint, GameObject>();
+				ids = new Dictionary<uint, List<GameObject>>();
 			
 				for(int i = 0; i != idsValues.Count; i++)
 				{

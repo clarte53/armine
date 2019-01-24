@@ -7,12 +7,69 @@ namespace Armine.Model.Type
 {
 	public partial class Scene
 	{
-		#region Members
-		private GameObject unityRoot = null;
-		private Dictionary<uint, GameObject> unityMapping = null;
-		private Dictionary<UnityEngine.Mesh, int> unityMeshes = null;
+        public class Mapping
+        {
+            #region Members
+            private Dictionary<uint, List<GameObject>> id2go = new Dictionary<uint, List<GameObject>>();
+            private Dictionary<GameObject, uint> go2id = new Dictionary<GameObject, uint>();
+            #endregion
+
+            #region Getter / Setter
+            public Dictionary<uint, List<GameObject>> Id2Go
+            {
+                get
+                {
+                    return id2go;
+                }
+            }
+
+            public Dictionary<GameObject, uint> Go2Id
+            {
+                get
+                {
+                    return go2id;
+                }
+            }
+            #endregion
+
+            #region Public methods
+            public uint GetNewId()
+            {
+                uint id = (uint) id2go.Count;
+
+                while(id2go.ContainsKey(id))
+                {
+                    id++;
+                }
+
+                return id;
+            }
+
+            public void Add(GameObject go, uint id)
+            {
+                List<GameObject> parts;
+
+                if(!id2go.TryGetValue(id, out parts))
+                {
+                    parts = new List<GameObject>();
+
+                    id2go.Add(id, parts);
+                }
+
+                parts.Add(go);
+                go2id.Add(go, id);
+            }
+            #endregion
+        }
+
+        #region Members
+        private GameObject unityRoot = null;
+        private Mapping unityMapping = null;
+        private Dictionary<UnityEngine.Mesh, int> unityMeshes = null;
 		private Dictionary<UnityEngine.Material, int> unityMaterials = null;
 		private Dictionary<Texture2D, int> unityTextures = null;
+        private Dictionary<Component, UnityComponent> unityComponents = null;
+        private HashSet<UnityReference> unityReferences = null;
 		#endregion
 
 		#region Getter / Setter
@@ -24,7 +81,7 @@ namespace Armine.Model.Type
 			}
 		}
 
-		public Dictionary<uint, GameObject> UnityMapping
+		public Mapping IdMapping
 		{
 			get
 			{
@@ -32,7 +89,21 @@ namespace Armine.Model.Type
 			}
 		}
 
-		public int GetUnityMeshIndex(UnityEngine.Mesh mesh)
+        public UnityComponent GetUnityComponent(Component component, Func<Scene, Component, UnityComponent> creator_callback)
+        {
+            UnityComponent result = null;
+
+            if(component != null && !unityComponents.TryGetValue(component, out result))
+            {
+                result = creator_callback(this, component);
+                
+                unityComponents[component] = result;
+            }
+
+            return result;
+        }
+
+        public int GetUnityMeshIndex(UnityEngine.Mesh mesh)
 		{
 			int index = -1;
 
@@ -82,6 +153,14 @@ namespace Armine.Model.Type
 
 			return index;
 		}
+
+        public void AddUnityReference(UnityReference reference)
+        {
+            if(unityReferences != null)
+            {
+                unityReferences.Add(reference);
+            }
+        }
 		#endregion
 
 		#region Import
@@ -91,11 +170,12 @@ namespace Armine.Model.Type
 			{
 				Scene scene = new Scene();
 
+                scene.unityMapping = new Mapping();
 				scene.unityMeshes = new Dictionary<UnityEngine.Mesh, int>();
 				scene.unityMaterials = new Dictionary<UnityEngine.Material, int>();
 				scene.unityTextures = new Dictionary<Texture2D, int>();
-
-                UnityComponent.ClearMapping();
+                scene.unityComponents = new Dictionary<Component, UnityComponent>();
+                scene.unityReferences = new HashSet<UnityReference>();
 
 				uint nb_nodes = CountNodes(root.transform);
 
@@ -173,11 +253,19 @@ namespace Armine.Model.Type
 					scene.textures = textures;
 				}
 
-				// Clean up
+                // Resolve references
+                foreach(UnityReference reference in scene.unityReferences)
+                {
+                    reference.ResolveReference(scene.unityMapping, scene.unityMeshes, scene.unityMaterials, scene.unityTextures);
+                }
+
+                // Clean up
+                scene.unityMapping = null;
 				scene.unityMeshes = null;
 				scene.unityMaterials = null;
 				scene.unityTextures = null;
-                UnityComponent.ClearMapping();
+                scene.unityComponents = null;
+                scene.unityReferences = null;
 
                 // Return the result
                 callback(scene);
@@ -197,7 +285,8 @@ namespace Armine.Model.Type
 				mesh_template.AddComponent<MeshFilter>();
 				mesh_template.AddComponent<MeshRenderer>();
 
-				unityMapping = new Dictionary<uint, GameObject>();
+				unityMapping = new Mapping();
+                unityReferences = new HashSet<UnityReference>();
 
 				uint nb_steps = CountNodes(root_node);
 				nb_steps += (uint) (meshes != null ? meshes.Length : 0);
@@ -207,7 +296,7 @@ namespace Armine.Model.Type
 				Utils.Progress progress = new Utils.Progress();
 				progress.Init(nb_steps, progress_callback);
 
-				IEnumerator it = root_node.ToUnity(this, null, unityMapping, node_template, mesh_template, progress);
+				IEnumerator it = root_node.ToUnity(this, null, node_template, mesh_template, progress);
 
 				while(it.MoveNext())
 				{
@@ -238,7 +327,7 @@ namespace Armine.Model.Type
 						unityRoot = new GameObject(nodes[0].name);
 
 						// Regiter an ID for this object
-						unityMapping.Add((uint) unityMapping.Count, unityRoot);
+						unityMapping.Add(unityRoot, unityMapping.GetNewId());
 
 						unityRoot.SetActive(false);
 
@@ -259,10 +348,19 @@ namespace Armine.Model.Type
 					}
 				}
 
-				if(unityRoot != null)
+                // Resolve references
+                foreach(UnityReference reference in unityReferences)
+                {
+                    reference.ToUnity(this);
+                }
+
+                if(unityRoot != null)
 				{
 					unityRoot.SetActive(root_node.Active);
 				}
+
+                // Clean up
+                unityReferences = null;
 			}
 		}
 		#endregion

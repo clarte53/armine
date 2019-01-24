@@ -27,8 +27,9 @@ namespace Armine.Model.Type
 		{
 			int hide_flags;
 
-			uint read = serializer.FromBytes(buffer, start, out name);
-			read += serializer.FromBytes(buffer, start + read, out tag);
+			uint read = serializer.FromBytes(buffer, start, out id);
+            read += serializer.FromBytes(buffer, start + read, out name);
+            read += serializer.FromBytes(buffer, start + read, out tag);
 			read += serializer.FromBytes(buffer, start + read, out layer);
 			read += serializer.FromBytes(buffer, start + read, out active);
 			read += serializer.FromBytes(buffer, start + read, out hide_flags);
@@ -47,8 +48,9 @@ namespace Armine.Model.Type
 
 		public uint ToBytes(Binary serializer, ref Binary.Buffer buffer, uint start)
 		{
-			uint written = serializer.ToBytes(ref buffer, start, name);
-			written += serializer.ToBytes(ref buffer, start + written, tag);
+			uint written = serializer.ToBytes(ref buffer, start, id);
+            written += serializer.ToBytes(ref buffer, start + written, name);
+            written += serializer.ToBytes(ref buffer, start + written, tag);
 			written += serializer.ToBytes(ref buffer, start + written, layer);
 			written += serializer.ToBytes(ref buffer, start + written, active);
 			written += serializer.ToBytes(ref buffer, start + written, (int) hideFlags);

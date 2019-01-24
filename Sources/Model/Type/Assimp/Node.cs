@@ -17,8 +17,11 @@ namespace Armine.Model.Type
 			// Create new node object
 			Node node = new Node();
 
-			// Get node name
-			node.name = Assimp.Convert.Name(assimp_node.mName, "node");
+            // Get node ID
+            node.id = context.id++;
+
+            // Get node name
+            node.name = Assimp.Convert.Name(assimp_node.mName, "node");
 
 			// Get node metadata
 			using(aiMetadata meta = assimp_node.mMetaData)

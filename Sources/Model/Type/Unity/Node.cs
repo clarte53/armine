@@ -25,14 +25,15 @@ namespace Armine.Model.Type
 		#endregion
 
 		#region Import
-		public static IEnumerator FromUnity(Scene scene, Transform node, Action<Node> callback, Progress progress = null, IEnumerable<Transform> meshes_nodes = null)
+		public static IEnumerator FromUnity(Scene scene, Transform node, Action<Node> callback, Progress progress = null, LinkedList<Transform> meshes_nodes = null)
 		{
 			if(scene != null && node != null && callback != null)
 			{
 				// Create a new node
 				Node current = new Node();
 
-				// Handle easy stuff
+                // Handle easy stuff
+                current.id = scene.IdMapping.GetNewId();
 				current.name = node.name;
 				current.tag = node.tag;
 				current.layer = node.gameObject.layer;
@@ -43,10 +44,13 @@ namespace Armine.Model.Type
 				current.scale = node.localScale;
 				current.metadata = Metadata.FromUnity(node.gameObject);
 
+                // Update mapping
+                scene.IdMapping.Add(node.gameObject, current.id);
+
                 // Handle components
                 current.components = node.gameObject.GetComponents<Component>()
                     .Where(SerializedComponent)
-                    .Select(UnityComponent.FromUnity)
+                    .Select(c => UnityComponent.FromUnity(scene, c))
                     .ToArray();
 
 				// Handle meshes and materials
@@ -56,9 +60,9 @@ namespace Armine.Model.Type
 
 				if(meshes_nodes != null)
 				{
-					foreach(Transform mesh in meshes_nodes)
+                    foreach(Transform t in meshes_nodes)
 					{
-						FromUnityMeshAndMaterials(scene, mesh, ref graphic_meshes);
+						FromUnityMeshAndMaterials(scene, t, ref graphic_meshes);
 					}
 				}
 
@@ -70,66 +74,72 @@ namespace Armine.Model.Type
 				// Handle children
 				if(node.childCount > 0)
 				{
-					Dictionary<string, HashSet<Transform>> children_sorted = new Dictionary<string, HashSet<Transform>>();
+					Dictionary<string, LinkedList<Transform>> children_sorted = new Dictionary<string, LinkedList<Transform>>();
 
 					// Group all children by hash, i.e. same name, transform, components and metadata
 					foreach(Transform child in node)
 					{
-						HashSet<Transform> set;
+                        LinkedList<Transform> group;
 
-						string hash = current.ComputeHash(child);
+						string hash = current.ComputeHash(scene, child);
 
-						if(!children_sorted.TryGetValue(hash, out set))
+						if(!children_sorted.TryGetValue(hash, out group))
 						{
-							set = new HashSet<Transform>();
+							group = new LinkedList<Transform>();
 
-							children_sorted.Add(hash, set);
+							children_sorted.Add(hash, group);
 						}
 
-						set.Add(child);
+						group.AddLast(child);
 					}
 
 					List<Node> children_nodes = new List<Node>(children_sorted.Count);
 
-					foreach(KeyValuePair<string, HashSet<Transform>> pair in children_sorted)
+					foreach(KeyValuePair<string, LinkedList<Transform>> pair in children_sorted)
 					{
-						Transform main_child = null;
-						uint child_count = 0;
-
 						// For each hash, check how many children have a descendancy
-						foreach(Transform child in pair.Value)
-						{
-							if(child.childCount > 0)
-							{
-								main_child = child;
-
-								child_count++;
-							}
-						}
+                        int child_count = pair.Value.Count(t => t.childCount > 0);
 
 						// Only one with descendancy ? The nodes must be grouped as they are only different meshes of the original unique node
 						if(child_count <= 1)
 						{
-							// No families at all ? Select randomly one of the meshes to serve as the main one
-							if(child_count <= 0)
+                            Transform main_child = null;
+                            
+                            // No families at all ? Select the first one of the meshes to serve as the main one
+                            if(child_count <= 0 || pair.Value.First.Value.childCount > 0)
 							{
-								IEnumerator<Transform> it = pair.Value.GetEnumerator();
+							    main_child = pair.Value.First.Value;
 
-								if(it.MoveNext())
-								{
-									main_child = it.Current;
-								}
-							}
+                                pair.Value.RemoveFirst();
+
+                            }
+                            else // Main child is not he first one. We need to manually search for it.
+                            {
+                                LinkedListNode<Transform> list_node = pair.Value.First;
+                                LinkedListNode<Transform> list_end = pair.Value.Last;
+
+                                while(list_node.Value.childCount <= 0 && list_node != list_end)
+                                {
+                                    list_node = list_node.Next;
+                                }
+
+                                if(list_node.Value.childCount > 0)
+                                {
+                                    main_child = list_node.Value;
+
+                                    pair.Value.Remove(list_node);
+                                }
+                            }
 
 							if(main_child != null)
 							{
 								pair.Value.Remove(main_child);
 
-								IEnumerator it = FromUnity(scene, main_child, children_nodes.Add, progress, pair.Value);
+								IEnumerator it_progress = FromUnity(scene, main_child, children_nodes.Add, progress, pair.Value);
 
-								while(it.MoveNext())
+								while(it_progress.MoveNext())
 								{
-									yield return it.Current;
+									yield return it_progress.Current;
 								}
 							}
 						}
@@ -229,14 +239,14 @@ namespace Armine.Model.Type
 		#endregion
 
 		#region Export
-		public IEnumerator ToUnity(Scene scene, Node parent_node, Dictionary<uint, GameObject> mapping, GameObject node_template, GameObject mesh_template, Progress progress = null)
+		public IEnumerator ToUnity(Scene scene, Node parent_node, GameObject node_template, GameObject mesh_template, Progress progress = null)
 		{
 			if(unityNodes == null)
 			{
 				if(meshes == null || meshes.Length <= 0)
 				{
 					unityNodes = new[] {
-						CreateUnityNode(node_template, parent_node, mapping)
+						CreateUnityNode(scene, node_template, parent_node)
 					};
 
 					if(progress != null)
@@ -258,7 +268,7 @@ namespace Armine.Model.Type
 							// Get the corresponding mesh
 							Mesh mesh = scene.meshes[graphic_mesh.meshIndex];
 
-							GameObject go = CreateUnityNode(mesh_template, parent_node, mapping);
+							GameObject go = CreateUnityNode(scene, mesh_template, parent_node);
 
 							go.GetComponent<MeshFilter>().sharedMesh = mesh.ToUnity(progress);
 
@@ -304,7 +314,7 @@ namespace Armine.Model.Type
 				{
 					foreach(Node child in children)
 					{
-						IEnumerator it = child.ToUnity(scene, this, mapping, node_template, mesh_template, progress);
+						IEnumerator it = child.ToUnity(scene, this, node_template, mesh_template, progress);
 
 						while(it.MoveNext())
 						{
@@ -317,13 +327,13 @@ namespace Armine.Model.Type
 			}
 		}
 
-		private GameObject CreateUnityNode(GameObject template, Node parent_node, Dictionary<uint, GameObject> mapping)
+		private GameObject CreateUnityNode(Scene scene, GameObject template, Node parent_node)
 		{
 			// Create unity gameobject
 			GameObject go = UnityEngine.Object.Instantiate(template);
 
 			// Regiter an ID for this object
-			mapping.Add((uint) mapping.Count, go);
+			scene.IdMapping.Add(go, id);
 
 			// Set object name
 			go.name = name;
@@ -367,7 +377,7 @@ namespace Armine.Model.Type
             {
                 foreach(UnityComponent component in components)
                 {
-                    component.ToUnity(go);
+                    component.ToUnity(scene, go);
                 }
             }
 
@@ -376,7 +386,7 @@ namespace Armine.Model.Type
 		#endregion
 
 		#region Hash
-		private string ComputeHash(Transform trans)
+		private string ComputeHash(Scene scene, Transform trans)
 		{
 			Binary.Buffer buffer = Module.Import.Binary.serializer.GetBuffer(5 * 1024); // Start with 5 Ko buffer
 
@@ -395,7 +405,7 @@ namespace Armine.Model.Type
             {
                 if(SerializedComponent(component))
                 {
-                    written += Module.Import.Binary.serializer.ToBytes(ref buffer, written, UnityComponent.FromUnity(component));
+                    written += Module.Import.Binary.serializer.ToBytes(ref buffer, written, UnityComponent.FromUnity(scene, component));
                 }
             }
 

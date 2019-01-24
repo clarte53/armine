@@ -11,14 +11,14 @@ namespace Armine.Model.Type
     {
         private partial interface IBackend
         {
-            void FromUnity(Component component, System.Type type);
-            void ToUnity(Component component, System.Type type);
+            void FromUnity(Scene scene, Component component, System.Type type);
+            void ToUnity(Scene scene, Component component, System.Type type);
         }
 
         private partial class BackendGeneric
         {
             #region Import
-            public void FromUnity(Component component, System.Type type)
+            public void FromUnity(Scene scene, Component component, System.Type type)
             {
                 fields = new Dictionary<string, object>();
                 properties = new Dictionary<string, object>();
@@ -29,16 +29,7 @@ namespace Armine.Model.Type
                 {
                     if(DoSerialization(member, () => member.IsPublic))
                     {
-                        try
-                        {
-                            Binary.GetSupportedType(member.FieldType);
-
-                            fields.Add(member.Name, member.GetValue(component));
-                        }
-                        catch(ArgumentException)
-                        {
-                            Debug.LogWarningFormat("Unsupported field '{0}' of type '{1}' in component of type '{2}'. Field will not be serialized.", member.Name, member.FieldType, type);
-                        }
+                        AddValue(scene, fields, type, member.FieldType, member.Name, member.GetValue(component));
                     }
                 }
 
@@ -53,16 +44,7 @@ namespace Armine.Model.Type
 
                         if(DoSerialization(property, () => DoSerialization(getter) && DoSerialization(setter)))
                         {
-                            try
-                            {
-                                Binary.GetSupportedType(property.PropertyType);
-
-                                properties.Add(property.Name, property.GetValue(component, null));
-                            }
-                            catch(ArgumentException)
-                            {
-                                Debug.LogWarningFormat("Unsupported property '{0}' of type '{1}' in component of type '{2}'. Property will not be serialized.", property.Name, property.PropertyType, type);
-                            }
+                            AddValue(scene, properties, type, property.PropertyType, property.Name, property.GetValue(component, null));
                         }
                     }
                     else
@@ -74,7 +56,7 @@ namespace Armine.Model.Type
             #endregion
 
             #region Export
-            public void ToUnity(Component component, System.Type type)
+            public void ToUnity(Scene scene, Component component, System.Type type)
             {
                 if(fields != null)
                 {
@@ -84,7 +66,7 @@ namespace Armine.Model.Type
 
                         if(member != null)
                         {
-                            member.SetValue(component, pair.Value);
+                            SetValue(scene, pair.Value, x => member.SetValue(component, x));
                         }
                         else
                         {
@@ -101,7 +83,7 @@ namespace Armine.Model.Type
 
                         if(property != null)
                         {
-                            property.SetValue(component, pair.Value, null);
+                            SetValue(scene, pair.Value, x => property.SetValue(component, x, null));
                         }
                         else
                         {
@@ -136,13 +118,50 @@ namespace Armine.Model.Type
 
                 return false;
             }
+
+            private static void AddValue(Scene scene, Dictionary<string, object> dictionnary, System.Type component_type, System.Type type, string name, object value)
+            {
+                if(value is UnityEngine.Object)
+                {
+                    dictionnary.Add(name, UnityReference.FromUnity(scene, value as UnityEngine.Object));
+                }
+                else
+                {
+                    try
+                    {
+                        Binary.GetSupportedType(type);
+
+                        dictionnary.Add(name, value);
+                    }
+                    catch(ArgumentException)
+                    {
+                        Debug.LogWarningFormat("Unsupported value '{0}' of type '{1}' in component of type '{2}'. Value will not be serialized.", name, type, component_type);
+                    }
+                }
+            }
+
+            private void SetValue(Scene scene, object value, Action<object> set_callback)
+            {
+                if(value != null && value is UnityReference)
+                {
+                    UnityReference reference = value as UnityReference;
+
+                    reference.UnitySetCallback = set_callback;
+
+                    scene.AddUnityReference(reference);
+                }
+                else
+                {
+                    set_callback(value);
+                }
+            }
             #endregion
         }
 
         private partial class BackendBinarySerializable
         {
             #region Import
-            public void FromUnity(Component component, System.Type type)
+            public void FromUnity(Scene scene, Component component, System.Type type)
             {
                 Binary.Buffer buffer = null;
 
@@ -167,7 +186,7 @@ namespace Armine.Model.Type
             #endregion
 
             #region Export
-            public void ToUnity(Component component, System.Type type)
+            public void ToUnity(Scene scene, Component component, System.Type type)
             {
                 using(Binary.Buffer buffer = Module.Import.Binary.serializer.GetBufferFromExistingData(serialized))
                 {
@@ -179,46 +198,34 @@ namespace Armine.Model.Type
 
         #region Members
         private const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-        private static Dictionary<Component, UnityComponent> components = new Dictionary<Component, UnityComponent>();
-        #endregion
-
-        #region Utility methods
-        public static void ClearMapping()
-        {
-            components.Clear();
-        }
         #endregion
 
         #region Import
-        public static UnityComponent FromUnity(Component component)
+        public static UnityComponent FromUnity(Scene scene, Component component)
         {
-            UnityComponent result = null;
+            return scene.GetUnityComponent(component, FromUnityCreator);
+        }
 
-            if(component != null && !components.TryGetValue(component, out result))
+        private static UnityComponent FromUnityCreator(Scene scene, Component component)
+        {
+            UnityComponent result = new UnityComponent();
+
+            result.type = component.GetType();
+            result.CreateBackend();
+
+            if(component is ISerializationCallbackReceiver)
             {
-                System.Type type = component.GetType();
-
-                result = new UnityComponent();
-
-                result.type = type;
-                result.CreateBackend();
-
-                components[component] = result;
-
-                if(component is ISerializationCallbackReceiver)
-                {
-                    ((ISerializationCallbackReceiver) component).OnBeforeSerialize();
-                }
-
-                result.backend.FromUnity(component, result.type);
+                ((ISerializationCallbackReceiver) component).OnBeforeSerialize();
             }
+
+            result.backend.FromUnity(scene, component, result.type);
 
             return result;
         }
         #endregion
 
         #region Export
-        public void ToUnity(GameObject go)
+        public void ToUnity(Scene scene, GameObject go)
         {
             Component component = go.GetComponent(type);
 
@@ -229,7 +236,7 @@ namespace Armine.Model.Type
 
             if(component != null)
             {
-                backend.ToUnity(component, type);
+                backend.ToUnity(scene, component, type);
 
                 if(component is ISerializationCallbackReceiver)
                 {

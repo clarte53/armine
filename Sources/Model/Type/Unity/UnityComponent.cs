@@ -128,21 +128,24 @@ namespace Armine.Model.Type
 
             private static void AddValue(Scene scene, Dictionary<string, object> dictionnary, System.Type component_type, System.Type type, string name, object value)
             {
-                if(value is UnityEngine.Object)
+                if(value != null)
                 {
-                    dictionnary.Add(name, UnityReference.FromUnity(scene, value as UnityEngine.Object));
-                }
-                else
-                {
-                    try
+                    if(value is UnityEngine.Object)
                     {
-                        Binary.GetSupportedType(type);
-
-                        dictionnary.Add(name, value);
+                        dictionnary.Add(name, UnityReference.FromUnity(scene, value as UnityEngine.Object));
                     }
-                    catch(ArgumentException)
+                    else
                     {
-                        Debug.LogWarningFormat("Unsupported value '{0}' of type '{1}' in component of type '{2}'. Value will not be serialized.", name, type, component_type);
+                        try
+                        {
+                            Binary.GetSupportedType(type);
+
+                            dictionnary.Add(name, value);
+                        }
+                        catch(ArgumentException)
+                        {
+                            Debug.LogWarningFormat("Unsupported value '{0}' of type '{1}' in component of type '{2}'. Value will not be serialized.", name, type, component_type);
+                        }
                     }
                 }
             }

@@ -18,10 +18,15 @@ namespace Armine.Model
 
 		[SerializeField]
 		private byte[] serializedData;
-		#endregion
+        #endregion
 
-		#region Serialization callbacks
-		public void OnBeforeSerialize()
+        public void Initialize()
+        {
+            data = new Dictionary<string, object>();
+        }
+
+        #region Serialization callbacks
+        public void OnBeforeSerialize()
 		{
 			serializedData = null;
 

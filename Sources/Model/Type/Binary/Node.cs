@@ -39,7 +39,7 @@ namespace Armine.Model.Type
 			read += serializer.FromBytes(buffer, start + read, out children);
 			read += serializer.FromBytes(buffer, start + read, out meshes);
             read += serializer.FromBytes(buffer, start + read, out components);
-            read += serializer.FromBytes(buffer, start + read, out metadata, true);
+            read += serializer.FromBytes(buffer, start + read, out metadata);
 
 			hideFlags = (UnityEngine.HideFlags) hide_flags;
 
@@ -60,7 +60,7 @@ namespace Armine.Model.Type
 			written += serializer.ToBytes(ref buffer, start + written, children);
 			written += serializer.ToBytes(ref buffer, start + written, meshes);
             written += serializer.ToBytes(ref buffer, start + written, components);
-            written += serializer.ToBytes(ref buffer, start + written, metadata, true);
+            written += serializer.ToBytes(ref buffer, start + written, metadata);
 
 			return written;
 		}

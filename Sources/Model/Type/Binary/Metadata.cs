@@ -18,7 +18,7 @@ namespace Armine.Model.Type
 			for(uint i = 0; i < size; ++i)
 			{
 				read += serializer.FromBytes(buffer, start + read, out key);
-				read += serializer.FromBytesDynamic(buffer, start + read, out value);
+				read += serializer.FromBytes(buffer, start + read, out value);
 
 				data.Add(key, value);
 			}
@@ -37,7 +37,7 @@ namespace Armine.Model.Type
 				if(!string.IsNullOrEmpty(pair.Key))
 				{
 					written += serializer.ToBytes(ref buffer, start + written, pair.Key);
-					written += serializer.ToBytesDynamic(ref buffer, start + written, pair.Value != null ? pair.Value : "");
+					written += serializer.ToBytes(ref buffer, start + written, pair.Value != null ? pair.Value : "");
 
 					count++;
 				}

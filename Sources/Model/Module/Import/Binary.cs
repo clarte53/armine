@@ -54,12 +54,12 @@ namespace Armine.Model.Module.Import
 
 		public IEnumerator ImportFromFile(string filename, ImporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
-			return serializer.Deserialize<Type.Scene>(filename, s => return_callback(s), p => progress_callback(p));
+			return serializer.Deserialize(filename, s => return_callback((Type.Scene) s), p => progress_callback(p));
 		}
 
 		public IEnumerator ImportFromBytes(string filename, byte[] data, ImporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
-			return serializer.Deserialize<Type.Scene>(data, s => return_callback(s), p => progress_callback(p));
+			return serializer.Deserialize(data, s => return_callback((Type.Scene) s), p => progress_callback(p));
 		}
 		#endregion
 	}

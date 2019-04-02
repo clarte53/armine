@@ -51,7 +51,7 @@ namespace Armine.Model.Type
                 for(uint i = 0; i < size; ++i)
                 {
                     read += serializer.FromBytes(buffer, start + read, out key);
-                    read += serializer.FromBytesDynamic(buffer, start + read, out value);
+                    read += serializer.FromBytes(buffer, start + read, out value);
 
                     dictionary.Add(key, value);
                 }
@@ -72,7 +72,7 @@ namespace Armine.Model.Type
                         if(!string.IsNullOrEmpty(pair.Key) && pair.Value != null)
                         {
                             written += serializer.ToBytes(ref buffer, start + written, pair.Key);
-                            written += serializer.ToBytesDynamic(ref buffer, start + written, pair.Value);
+                            written += serializer.ToBytes(ref buffer, start + written, pair.Value);
 
                             count++;
                         }
@@ -105,12 +105,9 @@ namespace Armine.Model.Type
         #region IBinarySerializable implementation
         public uint FromBytes(Binary serializer, Binary.Buffer buffer, uint start)
         {
-            string raw_type;
             uint read = 0;
 
-            read += serializer.FromBytes(buffer, start + read, out raw_type);
-
-            type = System.Type.GetType(raw_type);
+            read += serializer.FromBytes(buffer, start + read, out type);
 
             CreateBackend();
 
@@ -123,7 +120,7 @@ namespace Armine.Model.Type
         {
             uint written = 0;
 
-            written += serializer.ToBytes(ref buffer, start + written, string.Format("{0}, {1}", type.ToString(), type.Assembly.GetName().Name));
+            written += serializer.ToBytes(ref buffer, start + written, type);
             written += backend.ToBytes(serializer, ref buffer, start + written);
 
             return written;

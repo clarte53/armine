@@ -1,16 +1,43 @@
 fileFormatVersion: 2
 guid: 79c1cd3723c36cb4ab2089f046c0ab11
-timeCreated: 1548068623
-licenseType: Pro
 PluginImporter:
-  serializedVersion: 1
+  externalObjects: {}
+  serializedVersion: 2
   iconMap: {}
   executionOrder: {}
+  defineConstraints: []
   isPreloaded: 0
   isOverridable: 0
+  isExplicitlyReferenced: 0
   platformData:
-    Any:
+  - first:
+      '': Any
+    second:
+      enabled: 0
+      settings:
+        Exclude Editor: 0
+        Exclude Linux: 1
+        Exclude Linux64: 1
+        Exclude LinuxUniversal: 1
+        Exclude OSXUniversal: 1
+        Exclude Win: 1
+        Exclude Win64: 1
+  - first:
+      '': OSXIntel
+    second:
       enabled: 1
+      settings:
+        CPU: AnyCPU
+  - first:
+      '': OSXIntel64
+    second:
+      enabled: 1
+      settings:
+        CPU: AnyCPU
+  - first:
+      Any: 
+    second:
+      enabled: 0
       settings:
         Exclude Editor: 0
         Exclude Linux: 0
@@ -21,45 +48,65 @@ PluginImporter:
         Exclude OSXUniversal: 0
         Exclude Win: 0
         Exclude Win64: 0
-    Editor:
+  - first:
+      Editor: Editor
+    second:
       enabled: 1
       settings:
         CPU: AnyCPU
         DefaultValueInitialized: true
         OS: AnyOS
-    Linux:
+  - first:
+      Facebook: Win
+    second:
       enabled: 1
+      settings:
+        CPU: AnyCPU
+  - first:
+      Facebook: Win64
+    second:
+      enabled: 1
+      settings:
+        CPU: AnyCPU
+  - first:
+      Standalone: Linux
+    second:
+      enabled: 0
       settings:
         CPU: x86
-    Linux64:
-      enabled: 1
+  - first:
+      Standalone: Linux64
+    second:
+      enabled: 0
       settings:
         CPU: x86_64
-    LinuxUniversal:
-      enabled: 1
+  - first:
+      Standalone: LinuxUniversal
+    second:
+      enabled: 0
+      settings:
+        CPU: None
+  - first:
+      Standalone: OSXUniversal
+    second:
+      enabled: 0
       settings:
         CPU: AnyCPU
-    OSXIntel:
-      enabled: 1
+  - first:
+      Standalone: Win
+    second:
+      enabled: 0
       settings:
         CPU: AnyCPU
-    OSXIntel64:
-      enabled: 1
+  - first:
+      Standalone: Win64
+    second:
+      enabled: 0
       settings:
         CPU: AnyCPU
-    OSXUniversal:
-      enabled: 1
-      settings:
-        CPU: AnyCPU
-    Win:
-      enabled: 1
-      settings:
-        CPU: AnyCPU
-    Win64:
-      enabled: 1
-      settings:
-        CPU: AnyCPU
-    WindowsStoreApps:
+  - first:
+      Windows Store Apps: WindowsStoreApps
+    second:
       enabled: 0
       settings:
         CPU: AnyCPU

@@ -6,12 +6,16 @@ namespace Armine.Model.Type
 	{
 		public uint FromBytes(Binary serializer, Binary.Buffer buffer, uint start)
 		{
-			uint read = serializer.FromBytes(buffer, start, out root_node);
+            IBinarySerializable node;
+
+			uint read = serializer.FromBytes(buffer, start, out node);
 			read += serializer.FromBytes(buffer, start + read, out meshes);
 			read += serializer.FromBytes(buffer, start + read, out materials);
 			read += serializer.FromBytes(buffer, start + read, out textures);
 
-			return read;
+            root_node = (Node) node;
+
+            return read;
 		}
 
 		public uint ToBytes(Binary serializer, ref Binary.Buffer buffer, uint start)

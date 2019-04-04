@@ -90,7 +90,7 @@
 				unityMesh.RecalculateBounds();
 
 #if !UNITY_5_5_OR_NEWER
-				mesh.Optimize();
+				unityMesh.Optimize();
 #endif
 
 				if(progress != null)

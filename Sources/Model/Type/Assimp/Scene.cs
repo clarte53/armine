@@ -162,7 +162,7 @@ namespace Armine.Model.Type
 							context.scene = scene;
 
 							// Export nodes
-							Result nodes_result = context.threads.AddTask(() =>
+							IResult nodes_result = context.threads.AddTask(() =>
 							{
 								using(aiNode root = root_node.ToAssimp(context, this, null))
 								{

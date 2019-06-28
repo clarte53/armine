@@ -36,11 +36,11 @@ public class Load : MonoBehaviour
 
 		try
 		{
-StartCoroutine(importer.Import(filename, ReturnCallback, ProgressCallback));
+			StartCoroutine(importer.Import(filename, ReturnCallback, ProgressCallback));
 		}
 		catch(System.Exception ex)
 		{
-Debug.LogException(ex, this);
+			Debug.LogException(ex, this);
 		}
 	}
 
@@ -49,11 +49,11 @@ Debug.LogException(ex, this);
 	{
 		if(obj != null)
 		{
-Debug.Log(obj.name + " successfully loaded");
+			Debug.Log(obj.name + " successfully loaded");
 		}
 		else
 		{
-Debug.LogError("Failed to load " + obj.name);
+			Debug.LogError("Failed to load " + obj.name);
 		}
 	}
 

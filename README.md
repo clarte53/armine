@@ -135,3 +135,33 @@ importer.Assimp.ChangeFlag(Assimp.aiPostProcessSteps.aiProcessPreset_TargetRealt
 importer.Assimp.ChangeFlag(Assimp.aiPostProcessSteps.aiProcess_GenSmoothNormals, true);
 importer.Assimp.ChangeFlag(Assimp.aiPostProcessSteps.aiProcess_RemoveComponent, true);
 ```
+
+
+Architecture
+===============
+
+Armine is designed to import and export 3D models files from multiple sources.
+As such, to simplify the interdependancies between the sources, Armine is
+designed primarily as a hub between multiple plugins (sources), with a common
+intermediary format as the exchange protocol between the plugins.
+
+Because the main objective of the project is to load 3D model data into the
+Unity engine, the intermediary format is designed to be as fast as possible to
+load in Unity. In particular, Unity imposes strong restictions on parallelism
+of tasks. As a consequence, the intermediary format almost perfectly mimic the
+internal Unity format. However, this format provides the means for true
+asynchronous loading in the other plugins. Therefore, most of the loading
+process is asynchronous, while only a small part is executed in a coroutine
+to finalize the transition to Unity thread.
+
+The plugin system is designed around two main concepts:
+- Inheritance from IImporter or IExporter interfaces to create new source
+plugins, then registration of the plugin to the Importer or Exporter with the
+AddModule() method.
+- Extension of the partial classes in Armine.Model.Type to get access to the
+(often private) exchange types internal data. Typically the following two
+methods should be added to every types:
+..- public static T1 FromX(...)
+..- public T2 ToX(...)
+With X is the name of the plugin, T1 and T2 the exchange type and the source
+type respectively.

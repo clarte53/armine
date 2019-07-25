@@ -6,8 +6,6 @@ Conversion:
 - Bones
 
 Materials:
-- Invert normals in shader for simple shader without backface culling
-- Two sided material -> disable back face culling
 - Wireframe rendering mode
 - Blending function support
 - Ambient color
@@ -23,10 +21,5 @@ Assimp:
 - 3DXML CATMatConnection support (debug)
 - 3DXML UVR binary format support
 
-Export:
-- Saving assets
-
 Interface:
 - Bug: can not select folders and files in drives other than C:
-
-Tests:

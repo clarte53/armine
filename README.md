@@ -160,8 +160,8 @@ plugins, then registration of the plugin to the Importer or Exporter with the
 AddModule() method.
 - Extension of the partial classes in Armine.Model.Type to get access to the
 (often private) exchange types internal data. Typically the following two
-methods should be added to every types, with X is the name of the plugin, T1 and
-T2 the exchange type and the source type respectively:
+methods should be added to every types, where X is the name of the plugin, T1
+and T2 the exchange type and the source type respectively:
     - public static T1 FromX(...)
     - public T2 ToX(...)
 

@@ -79,41 +79,7 @@ automatically use the same options. To set Armine options, one can use the
 methods defined in Armine.Model.Importer.Assimp as such:
 ```
 // Reset options to default values
-importer.Assimp.SetProperty("GLOB_MEASURE_TIME", false);
-importer.Assimp.SetProperty("IMPORT_NO_SKELETON_MESHES", false);
-importer.Assimp.SetProperty("FAVOUR_SPEED", false);
-importer.Assimp.SetProperty("GLOB_MULTITHREADING", -1);
-importer.Assimp.SetProperty("PP_FID_ANIM_ACCURACY", 0.0f);
-importer.Assimp.SetProperty("PP_FD_REMOVE", false);
-importer.Assimp.SetProperty("PP_ICL_PTCACHE_SIZE", Assimp.assimp_swig.PP_ICL_PTCACHE_SIZE);
-importer.Assimp.SetProperty("PP_SBBC_MAX_BONES", Assimp.assimp_swig.AI_SBBC_DEFAULT_MAX_BONES);
-importer.Assimp.SetProperty("PP_SBP_REMOVE", 0);
-importer.Assimp.SetProperty("PP_OG_EXCLUSIVE_LIST", "");
-importer.Assimp.SetProperty("PP_GSN_MAX_SMOOTHING_ANGLE", 175.0f);
-importer.Assimp.SetProperty("PP_CT_MAX_SMOOTHING_ANGLE", 45.0f);
-importer.Assimp.SetProperty("PP_CT_TEXTURE_CHANNEL_INDEX", 0);
-importer.Assimp.SetProperty("PP_TUV_EVALUATE", 0x2 | 0x1 | 0x4);
-importer.Assimp.SetProperty("PP_PTV_KEEP_HIERARCHY", false);
-importer.Assimp.SetProperty("PP_PTV_NORMALIZE", false);
-importer.Assimp.SetProperty("PP_PTV_ADD_ROOT_TRANSFORMATION", false);
-importer.Assimp.SetProperty("PP_PTV_ROOT_TRANSFORMATION", "0 0 0 0 0 0 1 1 1");
-importer.Assimp.SetProperty("PP_RRM_EXCLUDE_LIST", "");
-importer.Assimp.SetProperty("PP_RVC_FLAGS", 0);
-importer.Assimp.SetProperty("PP_DB_ALL_OR_NONE", false);
-importer.Assimp.SetProperty("PP_DB_THRESHOLD", (float) Assimp.assimp_swig.AI_DEBONE_THRESHOLD);
-importer.Assimp.SetProperty("PP_LBW_MAX_WEIGHTS", Assimp.assimp_swig.AI_LMW_MAX_WEIGHTS);
-importer.Assimp.SetProperty("IMPORT_FBX_READ_ALL_GEOMETRY_LAYERS", true);
-importer.Assimp.SetProperty("IMPORT_FBX_READ_ALL_MATERIALS", false);
-importer.Assimp.SetProperty("IMPORT_FBX_READ_MATERIALS", true);
-importer.Assimp.SetProperty("IMPORT_FBX_READ_CAMERAS", true);
-importer.Assimp.SetProperty("IMPORT_FBX_READ_LIGHTS", true);
-importer.Assimp.SetProperty("IMPORT_FBX_READ_ANIMATIONS", true);
-importer.Assimp.SetProperty("IMPORT_FBX_STRICT_MODE", false);
-importer.Assimp.SetProperty("IMPORT_FBX_PRESERVE_PIVOTS", true);
-importer.Assimp.SetProperty("IMPORT_FBX_OPTIMIZE_EMPTY_ANIMATION_CURVES", true);
-importer.Assimp.SetProperty("IMPORT_COLLADA_IGNORE_UP_DIRECTION", false);
-importer.Assimp.SetProperty("IMPORT_3DXML_USE_NODE_MATERIALS", true);
-importer.Assimp.SetProperty("IMPORT_3DXML_USE_COMPLEX_MATERIALS", true);
+importer.Assimp.ResetToDefaultOptions();
 
 // Set some options
 importer.Assimp.SetProperty("PP_GSN_MAX_SMOOTHING_ANGLE", 80.0f);

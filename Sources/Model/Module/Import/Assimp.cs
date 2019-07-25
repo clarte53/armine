@@ -359,6 +359,49 @@ namespace Armine.Model.Module.Import
 		#endregion
 
 		#region Properties setters
+		public void ResetToDefaultOptions()
+		{
+			// Reset options to default values
+			SetProperty("GLOB_MEASURE_TIME", false);
+			SetProperty("IMPORT_NO_SKELETON_MESHES", false);
+			SetProperty("FAVOUR_SPEED", false);
+			SetProperty("GLOB_MULTITHREADING", -1);
+			SetProperty("PP_FID_ANIM_ACCURACY", 0.0f);
+			SetProperty("PP_FD_REMOVE", false);
+			SetProperty("PP_ICL_PTCACHE_SIZE", assimp_swig.PP_ICL_PTCACHE_SIZE);
+			SetProperty("PP_SBBC_MAX_BONES", assimp_swig.AI_SBBC_DEFAULT_MAX_BONES);
+			SetProperty("PP_SBP_REMOVE", 0);
+			SetProperty("PP_OG_EXCLUSIVE_LIST", "");
+			SetProperty("PP_GSN_MAX_SMOOTHING_ANGLE", 175.0f);
+			SetProperty("PP_CT_MAX_SMOOTHING_ANGLE", 45.0f);
+			SetProperty("PP_CT_TEXTURE_CHANNEL_INDEX", 0);
+			SetProperty("PP_TUV_EVALUATE", 0x2 | 0x1 | 0x4);
+			SetProperty("PP_PTV_KEEP_HIERARCHY", false);
+			SetProperty("PP_PTV_NORMALIZE", false);
+			SetProperty("PP_PTV_ADD_ROOT_TRANSFORMATION", false);
+			SetProperty("PP_PTV_ROOT_TRANSFORMATION", "0 0 0 0 0 0 1 1 1");
+			SetProperty("PP_RRM_EXCLUDE_LIST", "");
+			SetProperty("PP_RVC_FLAGS", 0);
+			SetProperty("PP_DB_ALL_OR_NONE", false);
+			SetProperty("PP_DB_THRESHOLD", (float) assimp_swig.AI_DEBONE_THRESHOLD);
+			SetProperty("PP_LBW_MAX_WEIGHTS", assimp_swig.AI_LMW_MAX_WEIGHTS);
+			SetProperty("IMPORT_FBX_READ_ALL_GEOMETRY_LAYERS", true);
+			SetProperty("IMPORT_FBX_READ_ALL_MATERIALS", false);
+			SetProperty("IMPORT_FBX_READ_MATERIALS", true);
+			SetProperty("IMPORT_FBX_READ_CAMERAS", true);
+			SetProperty("IMPORT_FBX_READ_LIGHTS", true);
+			SetProperty("IMPORT_FBX_READ_ANIMATIONS", true);
+			SetProperty("IMPORT_FBX_STRICT_MODE", false);
+			SetProperty("IMPORT_FBX_PRESERVE_PIVOTS", true);
+			SetProperty("IMPORT_FBX_OPTIMIZE_EMPTY_ANIMATION_CURVES", true);
+			SetProperty("IMPORT_COLLADA_IGNORE_UP_DIRECTION", false);
+			SetProperty("IMPORT_3DXML_USE_NODE_MATERIALS", true);
+			SetProperty("IMPORT_3DXML_USE_COMPLEX_MATERIALS", true);
+
+			// Unset post process steps
+			postProcessSteps = 0;
+		}
+
 		public void SetProperty(string property, int value)
 		{
 			Importer.SetPropertyInteger(property, value);

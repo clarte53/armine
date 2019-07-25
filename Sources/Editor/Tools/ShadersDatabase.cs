@@ -68,12 +68,6 @@ namespace Armine.Editor.Tools
 
 			Debug.LogFormat("Created shaders database. Elapsed time: {0}", watch.Elapsed);
 		}
-
-		[MenuItem("Armine/Tools/Build shaders database", true)]
-		private static bool ValidateBuildDatabase()
-		{
-			return Utils.License.IsLicensed();
-		}
 		#endregion
 
 		#region Shaders analysis coroutines

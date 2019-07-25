@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Armine.Utils;
 using UnityEngine;
 
 //-------------------------------------------------------------------------------
@@ -238,94 +237,77 @@ namespace Armine.Model
 			}
 			while(waiting);
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-			if(License.ImportIsPermitted())
-#else
-			if(true)
-#endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+			if(importer != null)
 			{
-				if(importer != null)
+				int refresh_rate = Screen.currentResolution.refreshRate;
+				float max_frame_duration = 1000.0f * 0.75f * (1.0f / (float) (refresh_rate >= 20 ? refresh_rate : 60)); // In milliseconds. Use only 75% of the available time to avoid missing vsync events
+
+				// Create timer to break the code that must be executed in unity thread into chunks that will fit into the required target framerate
+				System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+
+				DateTime start = DateTime.Now;
+
+				Type.Scene scene = null;
+
+				// Import data
+				IEnumerator it = importer(s => scene = s);
+
+				while(it.MoveNext())
 				{
-					int refresh_rate = Screen.currentResolution.refreshRate;
-					float max_frame_duration = 1000.0f * 0.75f * (1.0f / (float) (refresh_rate >= 20 ? refresh_rate : 60)); // In milliseconds. Use only 75% of the available time to avoid missing vsync events
+					yield return it.Current;
+				}
 
-					// Create timer to break the code that must be executed in unity thread into chunks that will fit into the required target framerate
-					System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+				if(scene != null)
+				{
+					// Convert data to Unity format
+					it = scene.ToUnity(progress_callback);
 
-					DateTime start = DateTime.Now;
+					timer.Start();
 
-					Type.Scene scene = null;
-
-					// Import data
-					IEnumerator it = importer(s => scene = s);
-
+					// Split code executed in unity thread into chunks that allow to maintain targeted framerate,
+					// without loosing unnecessary time by yielding every time possible (because 1 yield <=> 1 frame)
 					while(it.MoveNext())
 					{
-						yield return it.Current;
+						if(timer.ElapsedMilliseconds >= max_frame_duration)
+						{
+							yield return null;
+
+							timer.Reset();
+							timer.Start();
+						}
 					}
 
-					if(scene != null)
+					DateTime end = DateTime.Now;
+
+					// Add diagnostic info
+					if(scene.UnityRoot != null)
 					{
-						// Convert data to Unity format
-						it = scene.ToUnity(progress_callback);
+						int vertices_loaded = 0;
+						int faces_loaded = 0;
 
-						timer.Start();
-
-						// Split code executed in unity thread into chunks that allow to maintain targeted framerate,
-						// without loosing unnecessary time by yielding every time possible (because 1 yield <=> 1 frame)
-						while(it.MoveNext())
+						foreach(Type.Mesh mesh in scene.meshes)
 						{
-							if(timer.ElapsedMilliseconds >= max_frame_duration)
-							{
-								yield return null;
-
-								timer.Reset();
-								timer.Start();
-							}
+							vertices_loaded += mesh.VerticesCount;
+							faces_loaded += mesh.FacesCount;
 						}
 
-						DateTime end = DateTime.Now;
-
-						// Add diagnostic info
-						if(scene.UnityRoot != null)
-						{
-							int vertices_loaded = 0;
-							int faces_loaded = 0;
-
-							foreach(Type.Mesh mesh in scene.meshes)
-							{
-								vertices_loaded += mesh.VerticesCount;
-								faces_loaded += mesh.FacesCount;
-							}
-
-							scene.UnityRoot.AddComponent<Info>().Init(filename, end.Subtract(start), vertices_loaded, faces_loaded, scene.IdMapping.Id2Go);
-						}
-
-						if(return_callback != null)
-						{
-							return_callback(scene.UnityRoot);
-						}
-
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-						License.DecrementImportCount();
-#endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+						scene.UnityRoot.AddComponent<Info>().Init(filename, end.Subtract(start), vertices_loaded, faces_loaded, scene.IdMapping.Id2Go);
 					}
-					else
+
+					if(return_callback != null)
 					{
-						Debug.LogErrorFormat("Import of '{0}' failed.", filename);
+						return_callback(scene.UnityRoot);
 					}
 				}
 				else
 				{
-					Debug.LogError("Invalid null importer.");
+					Debug.LogErrorFormat("Import of '{0}' failed.", filename);
 				}
 			}
-#pragma warning disable 0162
 			else
 			{
-				Debug.LogError("Import is not possible with this license.");
+				Debug.LogError("Invalid null importer.");
 			}
-#pragma warning restore 0162
 
 			// Ready to accept new imports
 			lock(this)

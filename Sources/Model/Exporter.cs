@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.IO;
-using Armine.Utils;
 using UnityEngine;
 
 //-------------------------------------------------------------------------------
@@ -123,83 +122,66 @@ namespace Armine.Model
 			}
 			while(waiting);
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-			if(License.ExportIsPermitted())
-#else
-			if(true)
-#endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+			if(exporter != null)
 			{
-				if(exporter != null)
+				int refresh_rate = Screen.currentResolution.refreshRate;
+				float max_frame_duration = 1000.0f * 0.75f * (1.0f / (float) (refresh_rate >= 20 ? refresh_rate : 60)); // In milliseconds. Use only 75% of the available time to avoid missing vsync events
+
+				// Create timer to break the code that must be executed in unity thread into chunks that will fit into the required target framerate
+				System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+
+				DateTime start = DateTime.Now;
+
+				Type.Scene scene = null;
+
+				// Get data from Unity
+				IEnumerator it = Type.Scene.FromUnity(root, s => scene = s, progress_callback);
+
+				timer.Start();
+
+				// Split code executed in unity thread into chunks that allow to maintain targeted framerate,
+				// without loosing unnecessary time by yielding every time possible (because 1 yield <=> 1 frame)
+				while(it.MoveNext())
 				{
-					int refresh_rate = Screen.currentResolution.refreshRate;
-					float max_frame_duration = 1000.0f * 0.75f * (1.0f / (float) (refresh_rate >= 20 ? refresh_rate : 60)); // In milliseconds. Use only 75% of the available time to avoid missing vsync events
+					if(timer.ElapsedMilliseconds >= max_frame_duration)
+					{
+						yield return null;
 
-					// Create timer to break the code that must be executed in unity thread into chunks that will fit into the required target framerate
-					System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+						timer.Reset();
+						timer.Start();
+					}
+				}
 
-					DateTime start = DateTime.Now;
+				if(scene != null)
+				{
+					// Export data to final format
+					it = exporter(scene, s => success = s);
 
-					Type.Scene scene = null;
-
-					// Get data from Unity
-					IEnumerator it = Type.Scene.FromUnity(root, s => scene = s, progress_callback);
-
-					timer.Start();
-
-					// Split code executed in unity thread into chunks that allow to maintain targeted framerate,
-					// without loosing unnecessary time by yielding every time possible (because 1 yield <=> 1 frame)
 					while(it.MoveNext())
 					{
-						if(timer.ElapsedMilliseconds >= max_frame_duration)
-						{
-							yield return null;
-
-							timer.Reset();
-							timer.Start();
-						}
+						yield return it.Current;
 					}
 
-					if(scene != null)
+					DateTime end = DateTime.Now;
+
+					if(success)
 					{
-						// Export data to final format
-						it = exporter(scene, s => success = s);
-
-						while(it.MoveNext())
-						{
-							yield return it.Current;
-						}
-
-						DateTime end = DateTime.Now;
-
-						if(success)
-						{
-							Debug.LogFormat("Export successful: {0}.", end.Subtract(start));
-						}
-						else
-						{
-							Debug.LogErrorFormat("Export to '{0}' failed.", filename);
-						}
+						Debug.LogFormat("Export successful: {0}.", end.Subtract(start));
 					}
 					else
 					{
 						Debug.LogErrorFormat("Export to '{0}' failed.", filename);
 					}
-
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-					License.DecrementExportCount();
-#endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 				}
 				else
 				{
-					Debug.LogError("Invalid null exporter.");
+					Debug.LogErrorFormat("Export to '{0}' failed.", filename);
 				}
 			}
-#pragma warning disable 0162
 			else
 			{
-				Debug.Log("Export is not possible with this license.");
+				Debug.LogError("Invalid null exporter.");
 			}
-#pragma warning restore 0162
 
 			// Ready to accept new exports
 			lock(this)

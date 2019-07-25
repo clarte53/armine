@@ -1,5 +1,3 @@
-#if UNITY_EDITOR_WIN
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -74,12 +72,6 @@ namespace Armine.Editor.Windows
 		{
 			GetWindow(typeof(Importer), false, "Import");
 		}
-		
-		[MenuItem("Armine/Import %i", true)]
-		static public bool ValidateShowImport()
-		{
-			return Utils.License.IsLicensed() && Utils.License.ImportIsPermitted();
-		}
 		#endregion
 
 		#region Serialization callback
@@ -125,112 +117,102 @@ namespace Armine.Editor.Windows
 				rootObjects = new List<GameObject>();
 			}
 
-			if(Utils.License.IsLicensed())
+			GUILayout.BeginVertical();
+
+			GUILayout.Label("Select files to import:");
+
+			string[] extensions = importer.SupportedExtensions;
+
+			for(int i = 0; i < extensions.Length; i++)
 			{
-				GUILayout.BeginVertical();
+				extensions[i] = extensions[i].Insert(0, "*.");
+			}
 
-				GUILayout.Label("Select files to import:");
-
-				string[] extensions = importer.SupportedExtensions;
-
-				for(int i = 0; i < extensions.Length; i++)
-				{
-					extensions[i] = extensions[i].Insert(0, "*.");
-				}
-
-				fileSelector.DisplayConfiguration(string.Join(";", extensions), true);
+			fileSelector.DisplayConfiguration(string.Join(";", extensions), true);
 				
-				if(fileSelector.Filenames != null)
+			if(fileSelector.Filenames != null)
+			{
+				if(fileSelector.Modified)
 				{
-					if(fileSelector.Modified)
+					displayAssimpOptions = false;
+
+					foreach(string file in fileSelector.Filenames)
 					{
-						displayAssimpOptions = false;
-
-						foreach(string file in fileSelector.Filenames)
+						if(Path.GetExtension(file).Remove(0, 1).ToLower() != Constants.binaryExtension)
 						{
-							if(Path.GetExtension(file).Remove(0, 1).ToLower() != Constants.binaryExtension)
-							{
-								displayAssimpOptions = true;
+							displayAssimpOptions = true;
 
-								break;
-							}
+							break;
 						}
-
-						importMenu.Options.Init(importer, fileSelector.Filenames);
-						fileSelector.Modified = false;
 					}
 
-					if(displayAssimpOptions)
+					importMenu.Options.Init(importer, fileSelector.Filenames);
+					fileSelector.Modified = false;
+				}
+
+				if(displayAssimpOptions)
+				{
+					importMenu.DisplayConfiguration();
+				}
+				else
+				{
+					GUILayout.FlexibleSpace();
+				}
+
+				if(GUILayout.Button("Import"))
+				{
+					rootObjects.Clear();
+					duration = new TimeSpan(0);
+					vertices = 0;
+					faces = 0;
+
+					importMenu.Options.ApplyConfiguration(importer);
+
+					// Use serialization to create a deep copy clone
+					Model.Option.Import options;
+					using(Stream stream = new MemoryStream())
 					{
-						importMenu.DisplayConfiguration();
+						IFormatter formatter = new BinaryFormatter();
+
+						formatter.Serialize(stream, importMenu.Options);
+
+						stream.Seek(0, SeekOrigin.Begin);
+
+						options = (Model.Option.Import) formatter.Deserialize(stream);
+					}
+
+					if(options != null)
+					{
+						IEnumerator it = Import(importer, options);
+
+						while(it.MoveNext());
 					}
 					else
 					{
-						GUILayout.FlexibleSpace();
-					}
-
-					if(GUILayout.Button("Import"))
-					{
-						if(Utils.License.ImportIsPermitted())
-						{
-							rootObjects.Clear();
-							duration = new TimeSpan(0);
-							vertices = 0;
-							faces = 0;
-
-							importMenu.Options.ApplyConfiguration(importer);
-
-							// Use serialization to create a deep copy clone
-							Model.Option.Import options;
-							using(Stream stream = new MemoryStream())
-							{
-								IFormatter formatter = new BinaryFormatter();
-
-								formatter.Serialize(stream, importMenu.Options);
-
-								stream.Seek(0, SeekOrigin.Begin);
-
-								options = (Model.Option.Import) formatter.Deserialize(stream);
-							}
-
-							if(options != null)
-							{
-								IEnumerator it = Import(importer, options);
-
-								while(it.MoveNext());
-							}
-							else
-							{
-								Debug.LogError("Impossible to save import options.");
-							}
-						}
-						else
-						{
-							Debug.LogError("Import is not possible with this license.");
-						}
-					}
-
-					bool display_stats = false;
-					foreach(GameObject root in rootObjects)
-					{
-						if(root != null)
-						{
-							EditorGUILayout.ObjectField(root, typeof(GameObject), false);
-
-							display_stats = true;
-						}
-					}
-
-					if(display_stats)
-					{
-						EditorGUILayout.LabelField("Vertices: " + vertices);
-						EditorGUILayout.LabelField("Faces: " + faces);
-						EditorGUILayout.LabelField("Duration: " + duration);
+						Debug.LogError("Impossible to save import options.");
 					}
 				}
 
-				GUILayout.EndVertical();
+				bool display_stats = false;
+				foreach(GameObject root in rootObjects)
+				{
+					if(root != null)
+					{
+						EditorGUILayout.ObjectField(root, typeof(GameObject), false);
+
+						display_stats = true;
+					}
+				}
+
+				if(display_stats)
+				{
+					EditorGUILayout.LabelField("Vertices: " + vertices);
+					EditorGUILayout.LabelField("Faces: " + faces);
+					EditorGUILayout.LabelField("Duration: " + duration);
+				}
 			}
+
+			GUILayout.EndVertical();
 		}
 
 		public void OnDestroy()
@@ -287,5 +269,3 @@ namespace Armine.Editor.Windows
 		#endregion
 	}
 }
-
-#endif // UNITY_EDITOR_WIN

@@ -1,6 +1,4 @@
-﻿#if UNITY_EDITOR_WIN
-
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace Armine.Editor.Tools
@@ -18,75 +16,64 @@ namespace Armine.Editor.Tools
 		{
 			EditorWindow.GetWindow(typeof(RenderCubemap), false, "Cubemap");
 		}
-		
-		[MenuItem("Armine/Tools/Render Cubemap", true)]
-		private static bool ValidateShowCubemap()
-		{
-			return Utils.License.IsLicensed() && Utils.License.ToolScriptsArePermited();
-		}
 
 		private void OnGUI()
 		{
-			if(Utils.License.IsLicensed() && Utils.License.ToolScriptsArePermited())
+			GUILayout.BeginVertical();
+
+			GUILayout.Label("Render scene into Cubemap: ");
+
+			GUIContent[] labels = {
+				new GUIContent("Cubemap: "),
+				new GUIContent("Position: ")
+			};
+
+			float width = 0.0f;
+			foreach(GUIContent label in labels)
 			{
-				GUILayout.BeginVertical();
+				float min;
+				float max;
 
-				GUILayout.Label("Render scene into Cubemap: ");
+				GUI.skin.label.CalcMinMaxWidth(label, out min, out max);
 
-				GUIContent[] labels = {
-					new GUIContent("Cubemap: "),
-					new GUIContent("Position: ")
-				};
-
-				float width = 0.0f;
-				foreach(GUIContent label in labels)
-				{
-					float min;
-					float max;
-
-					GUI.skin.label.CalcMinMaxWidth(label, out min, out max);
-
-					width = System.Math.Max(width, min);
-				}
+				width = System.Math.Max(width, min);
+			}
 				
-				GUILayout.BeginHorizontal();
+			GUILayout.BeginHorizontal();
 
-				GUILayout.BeginVertical(GUILayout.Width(width));
-				foreach(GUIContent label in labels)
-				{
-					GUILayout.Label(label);
-				}
-				GUILayout.EndVertical();
+			GUILayout.BeginVertical(GUILayout.Width(width));
+			foreach(GUIContent label in labels)
+			{
+				GUILayout.Label(label);
+			}
+			GUILayout.EndVertical();
 
-				GUILayout.BeginVertical();
-				cubemapOutput = (Cubemap) EditorGUILayout.ObjectField(cubemapOutput, typeof(Cubemap), true);
-				viewPoint = (Transform) EditorGUILayout.ObjectField(viewPoint, typeof(Transform), true);
-				GUILayout.EndVertical();
+			GUILayout.BeginVertical();
+			cubemapOutput = (Cubemap) EditorGUILayout.ObjectField(cubemapOutput, typeof(Cubemap), true);
+			viewPoint = (Transform) EditorGUILayout.ObjectField(viewPoint, typeof(Transform), true);
+			GUILayout.EndVertical();
 
-				GUILayout.EndHorizontal();
+			GUILayout.EndHorizontal();
 
-				bool create = GUILayout.Button("Create scene");
+			bool create = GUILayout.Button("Create scene");
 
-				bool enabled = GUI.enabled;
-				GUI.enabled = cubemapOutput != null && viewPoint != null;
+			bool enabled = GUI.enabled;
+			GUI.enabled = cubemapOutput != null && viewPoint != null;
 
-				bool render = GUILayout.Button("Render Cubemap");
+			bool render = GUILayout.Button("Render Cubemap");
 
-				GUI.enabled = enabled;
+			GUI.enabled = enabled;
 
-				GUILayout.EndVertical();
+			GUILayout.EndVertical();
 
-				if(create)
-				{
-					CreateScene();
-				}
+			if(create)
+			{
+				CreateScene();
+			}
 
-				if(render && cubemapOutput != null && viewPoint != null)
-				{
-					Render();
-
-					Utils.License.DecrementToolCount();
-				}
+			if(render && cubemapOutput != null && viewPoint != null)
+			{
+				Render();
 			}
 		}
 
@@ -196,5 +183,3 @@ namespace Armine.Editor.Tools
 		}
 	}
 }
-
-#endif // UNITY_EDITOR_WIN

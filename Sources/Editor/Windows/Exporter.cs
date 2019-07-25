@@ -1,5 +1,3 @@
-#if UNITY_EDITOR_WIN
-
 using System;
 using System.Collections;
 using Armine.UI.File;
@@ -55,12 +53,6 @@ namespace Armine.Editor.Windows
 		{
 			EditorWindow.GetWindow(typeof(Exporter), false, "Export");
 		}
-		
-		[MenuItem("Armine/Export %e", true)]
-		static public bool ValidateShowExport()
-		{
-			return Utils.License.IsLicensed() && Utils.License.ExportIsPermitted();
-		}
 		#endregion
 
 		#region MonoBehaviour callbacks
@@ -76,75 +68,65 @@ namespace Armine.Editor.Windows
 				fileSelector = new NativeSaverEditor();
 			}
 
-			if(Utils.License.IsLicensed())
-			{
-				GUILayout.BeginVertical();
+			GUILayout.BeginVertical();
 			
-				GUILayout.Label("Select the root GameObject to export:");
+			GUILayout.Label("Select the root GameObject to export:");
 
-				rootObject = (GameObject) EditorGUILayout.ObjectField(rootObject, typeof(GameObject), true);
+			rootObject = (GameObject) EditorGUILayout.ObjectField(rootObject, typeof(GameObject), true);
 
-				if(rootObject != null)
+			if(rootObject != null)
+			{
+				saveAsPrefab = GUILayout.Toggle(saveAsPrefab, "Save as Prefab");
+
+				GUILayout.FlexibleSpace();
+
+				if(GUILayout.Button("Export"))
 				{
-					saveAsPrefab = GUILayout.Toggle(saveAsPrefab, "Save as Prefab");
+					string path = fileSelector.Load();
 
-					GUILayout.FlexibleSpace();
+					string[] extensions_list = exporter.SupportedExtensions;
 
-					if(GUILayout.Button("Export"))
+					for(int i = 0; i < extensions_list.Length; i++)
 					{
-						if(Utils.License.ExportIsPermitted())
+						extensions_list[i] = extensions_list[i].Insert(0, "*.");
+					}
+
+					string extensions = string.Format(";{0}", string.Join(";", extensions_list));
+
+					if(saveAsPrefab)
+					{
+						extensions = "prefab";
+					}
+
+					fileSelector.DisplaySelector(path, string.Format("{0}.{1}", rootObject.name, Constants.binaryExtension), extensions);
+
+					if(fileSelector.Modified && fileSelector.HasFile())
+					{
+						string file = fileSelector.First();
+
+						if(!string.IsNullOrEmpty(file))
 						{
-							string path = fileSelector.Load();
-
-							string[] extensions_list = exporter.SupportedExtensions;
-
-							for(int i = 0; i < extensions_list.Length; i++)
-							{
-								extensions_list[i] = extensions_list[i].Insert(0, "*.");
-							}
-
-							string extensions = string.Format(";{0}", string.Join(";", extensions_list));
+							fileSelector.Save();
 
 							if(saveAsPrefab)
 							{
-								extensions = "prefab";
+								Tools.PrefabExporter prefab = new Tools.PrefabExporter();
+
+								prefab.Save(rootObject, file);
 							}
-
-							fileSelector.DisplaySelector(path, string.Format("{0}.{1}", rootObject.name, Constants.binaryExtension), extensions);
-
-							if(fileSelector.Modified && fileSelector.HasFile())
+							else
 							{
-								string file = fileSelector.First();
+								IEnumerator it = Export(exporter, file);
 
-								if(!string.IsNullOrEmpty(file))
-								{
-									fileSelector.Save();
-
-									if(saveAsPrefab)
-									{
-										Tools.PrefabExporter prefab = new Tools.PrefabExporter();
-
-										prefab.Save(rootObject, file);
-									}
-									else
-									{
-										IEnumerator it = Export(exporter, file);
-
-										while(it.MoveNext())
-											;
-									}
-								}
+								while(it.MoveNext())
+									;
 							}
-						}
-						else
-						{
-							Debug.LogError("Export is not possible with this license.");
 						}
 					}
 				}
-
-				GUILayout.EndVertical();
 			}
+
+			GUILayout.EndVertical();
 		}
 		#endregion
 
@@ -172,5 +154,3 @@ namespace Armine.Editor.Windows
 		#endregion
 	}
 }
-
-#endif // UNITY_EDITOR_WIN

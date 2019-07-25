@@ -1,9 +1,6 @@
-﻿#if UNITY_EDITOR_WIN
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Armine.Utils;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,7 +22,7 @@ namespace Armine.Editor.Tools
 		#region Save as Prefab
 		internal void Save(GameObject root, string file)
 		{
-			if(root != null && License.ExportIsPermitted())
+			if(root != null)
 			{
 				// Get the path of the project
 				string[] directories = Application.dataPath.Split('/');
@@ -55,8 +52,6 @@ namespace Armine.Editor.Tools
 					}
 
 					CreatePrefab(path, shortenedpath, root);
-
-					License.DecrementExportCount();
 				}
 				else
 				{
@@ -214,5 +209,3 @@ namespace Armine.Editor.Tools
 		#endregion
 	}
 }
-
-#endif // UNITY_EDITOR_WIN

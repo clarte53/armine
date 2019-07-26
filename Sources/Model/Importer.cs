@@ -9,22 +9,13 @@ using UnityEngine;
 //-------------------------------------------------------------------------------
 namespace Armine.Model
 {
-	//-------------------------------------------------------------------------------
-	// Class Importer
-	//-------------------------------------------------------------------------------
+	/// <summary>
+	/// Importer class.
+	/// 
+	/// This class register and manage all existing importers modules.
+	/// </summary>
 	public sealed class Importer : Module.Manager<Module.IImporter>
 	{
-		//-------------------------------------------------------------------------------
-		// Class InvalidDataException
-		//-------------------------------------------------------------------------------
-		public class InvalidDataException : Exception
-		{
-			public InvalidDataException(string message) : base(message)
-			{
-				
-			}
-		}
-
 		#region Members
 		internal const float unityLoadingPercentage = 0.15f;
 
@@ -33,6 +24,9 @@ namespace Armine.Model
 		#endregion
 
 		#region Constructors
+		/// <summary>
+		/// Constructor of importer class.
+		/// </summary>
 		public Importer()
 		{
 			importing = false;
@@ -47,6 +41,9 @@ namespace Armine.Model
 		#endregion
 
 		#region Getter / Setter
+		/// <summary>
+		/// Get or set the with to use for line geometries.
+		/// </summary>
 		public static float LineWidth
 		{
 			get
@@ -61,6 +58,9 @@ namespace Armine.Model
 		}
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+		/// <summary>
+		/// Get the Assimp importer.
+		/// </summary>
 		public Module.Import.Assimp Assimp
 		{
 			get
@@ -70,6 +70,9 @@ namespace Armine.Model
 		}
 #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
+		/// <summary>
+		/// Get the binary importer.
+		/// </summary>
 		public Module.Import.Binary Binary
 		{
 			get
@@ -80,6 +83,13 @@ namespace Armine.Model
 		#endregion
 
 		#region Texture registration
+		/// <summary>
+		/// Register an external texture. This utility helps making the link to external textures referenced
+		/// by a file name, even when the file is not directly available / accessible.
+		/// </summary>
+		/// <param name="filename"></param>
+		/// <param name="data"></param>
+		/// <returns></returns>
 		public bool RegisterTexture(string filename, byte[] data)
 		{
 			if(isDisposed)
@@ -101,6 +111,11 @@ namespace Armine.Model
 			return success;
 		}
 
+		/// <summary>
+		/// Get the texture referenced by a given filename, including those previously registered.
+		/// </summary>
+		/// <param name="filename">The file name to reference the texture.</param>
+		/// <returns>The texture as a byte array (no decoding done).</returns>
 		public byte[] GetTexture(string filename)
 		{
 			if(isDisposed)
@@ -120,8 +135,17 @@ namespace Armine.Model
 		#endregion
 
 		#region Import overloads
+		/// <summary>
+		/// Delegate for functions to use to notify completion of an import task.
+		/// </summary>
+		/// <param name="root"></param>
 		public delegate void ReturnCallback(GameObject root);
 
+		/// <summary>
+		/// Import a file synchronously.
+		/// </summary>
+		/// <param name="filename">The name and path of the file to import.</param>
+		/// <returns>The root gameobject of the imported geometries.</returns>
 		public GameObject Import(string filename)
 		{
 			GameObject result = null;
@@ -133,6 +157,16 @@ namespace Armine.Model
 			return result;
 		}
 
+		/// <summary>
+		/// Import a file synchronously from a given byte array as source.
+		/// </summary>
+		/// <remarks>
+		/// The file name is used mainly to determine wich importer to use based on the extension,
+		/// as well as for logging and error reporting purposes.
+		/// </remarks>
+		/// <param name="filename">The name of the file to import.</param>
+		/// <param name="data">The array containg the data to import.</param>
+		/// <returns>The root gameobject of the imported geometries.</returns>
 		public GameObject Import(string filename, byte[] data)
 		{
 			GameObject result = null;
@@ -146,6 +180,17 @@ namespace Armine.Model
 		#endregion
 
 		#region Import implementation
+		/// <summary>
+		/// Import a file asynchronously.
+		/// </summary>
+		/// <remarks>
+		/// This method must be used as a coroutine. Failure to do so whould result in no import whatsoever. In particular,
+		/// for successful import, the returned iterator must be itered over until it's end.
+		/// </remarks>
+		/// <param name="filename">The name and path of the file to import.</param>
+		/// <param name="return_callback">The callback that will be called on import completion.</param>
+		/// <param name="progress_callback">The callback that will be called periodically during import to notify current progress.</param>
+		/// <returns>An iterator to use in a coroutine.</returns>
 		public IEnumerator Import(string filename, ReturnCallback return_callback, Module.ProgressCallback progress_callback = null)
 		{
 			if(isDisposed)
@@ -178,6 +223,21 @@ namespace Armine.Model
 			return null;
 		}
 
+		/// <summary>
+		/// Import a file asynchronously from a given byte array as source.
+		/// </summary>
+		/// <remarks>
+		/// This method must be used as a coroutine. Failure to do so whould result in no import whatsoever. In particular,
+		/// for successful import, the returned iterator must be itered over until it's end.
+		/// 
+		/// The file name is used mainly to determine wich importer to use based on the extension,
+		/// as well as for logging and error reporting purposes.
+		/// </remarks>
+		/// <param name="filename">The name of the file to import.</param>
+		/// <param name="data">The array containg the data to import.</param>
+		/// <param name="return_callback">The callback that will be called on import completion.</param>
+		/// <param name="progress_callback">The callback that will be called periodically during import to notify current progress.</param>
+		/// <returns>An iterator to use in a coroutine.</returns>
 		public IEnumerator Import(string filename, byte[] data, ReturnCallback return_callback, Module.ProgressCallback progress_callback = null)
 		{
 			if(isDisposed)

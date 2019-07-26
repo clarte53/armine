@@ -16,6 +16,9 @@ namespace Armine.Model.Module
 	public delegate void ExporterReturnCallback(byte[] data);
 	#endregion
 
+	/// <summary>
+	/// Base class of all export modules.
+	/// </summary>
 	public interface IExporter : IModule
 	{
 		/// <summary>

@@ -4,6 +4,9 @@ using Armine.Model.Type;
 
 namespace Armine.Model.Module.Export
 {
+	/// <summary>
+	/// Binary exporter module.
+	/// </summary>
 	public class Binary : IExporter
 	{
 		#region Members
@@ -35,6 +38,9 @@ namespace Armine.Model.Module.Export
 		//	Dispose(false);
 		//}
 
+		/// <summary>
+		/// Release the ressources used by the exporter.
+		/// </summary>
 		public void Dispose()
 		{
 			// Pass true in dispose method to clean managed resources too and say GC to skip finalize in next line.
@@ -47,16 +53,36 @@ namespace Armine.Model.Module.Export
 		#endregion
 
 		#region IExporter implementation
+		/// <summary>
+		/// Provide the list of file extensions supported by this exporter module.
+		/// </summary>
+		/// <returns>The list of supported extensions.</returns>
 		public string[] GetSupportedExtensions()
 		{
 			return extensions;
 		}
 
+		/// <summary>
+		/// Export data asynchronously to a destination file.
+		/// </summary>
+		/// <param name="scene">The scene representation to export.</param>
+		/// <param name="filename">The file to export to.</param>
+		/// <param name="return_callback">The calback used to notify the caller when the export is completed.</param>
+		/// <param name="progress_callback">The callback to regularly notify the caller of the export progress.</param>
+		/// <returns>An iterator to use inside a coroutine.</returns>
 		public IEnumerator ExportToFile(Scene scene, string filename, ExporterSuccessCallback return_callback, ProgressCallback progress_callback)
 		{
 			return Import.Binary.serializer.Serialize(scene, filename, s => return_callback(s), p => progress_callback(p));
 		}
 
+		/// <summary>
+		/// Export data asynchronously to a byte array.
+		/// </summary>
+		/// <param name="scene">The scene representation to export.</param>
+		/// <param name="filename">The name of the file corresponding to the exported data. The extension is used to determine which codec use.</param>
+		/// <param name="return_callback">The calback used to notify the caller when the export is completed.</param>
+		/// <param name="progress_callback">The callback to regularly notify the caller of the export progress.</param>
+		/// <returns>An iterator to use inside a coroutine.</returns>
 		public IEnumerator ExportToBytes(Scene scene, string filename, ExporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
 			return Import.Binary.serializer.Serialize(scene, (data, written) => {

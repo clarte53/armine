@@ -9,43 +9,92 @@ using CLARTE.Threads;
 
 namespace Armine.Model.Module.Import
 {
+	/// <summary>
+	/// Assimp importer module.
+	/// </summary>
 	public class Assimp : IImporter
 	{
-		//-------------------------------------------------------------------------------
-		// Class UnsupportedTypeException
-		//-------------------------------------------------------------------------------
+		/// <summary>
+		/// Exception raised when trying to access properties of unsupported type.
+		/// </summary>
 		public class UnsupportedTypeException : Exception
 		{
+			/// <summary>
+			/// Constructor of UnsupportedTypeException.
+			/// </summary>
+			/// <param name="message">The error message associated with this exception.</param>
 			public UnsupportedTypeException(string message) : base(message)
 			{
 
 			}
 		}
 
-		//-------------------------------------------------------------------------------
-		// Class NotDefinedException
-		//-------------------------------------------------------------------------------
+		/// <summary>
+		/// Exception raised when trying to access properties that does not exist.
+		/// </summary>
 		public class NotDefinedException : Exception
 		{
+			/// <summary>
+			/// Constructor of NotDefinedException.
+			/// </summary>
+			/// <param name="message">The error message associated with this exception.</param>
 			public NotDefinedException(string message) : base(message)
 			{
 
 			}
 		}
 
+		/// <summary>
+		/// Structure containing the current info required by the different import methods.
+		/// </summary>
 		public class Context
 		{
 			#region Members
+			/// <summary>
+			/// The importer manager used for import.
+			/// </summary>
 			public Importer importer;
+
+			/// <summary>
+			/// A thread pool to execute asynchronous tasks.
+			/// </summary>
+			/// <remarks>
+			/// A dedicated pool is used as many tasks are launched in batches, and the importer need to be able
+			/// to await for the completion of all tasks in a batch before moving forward to the next steps of import.
+			/// </remarks>
 			public Pool threads;
+
+			/// <summary>
+			/// The progress callback used to notify the caller of import progress.
+			/// </summary>
 			public Progress progress;
+
+			/// <summary>
+			/// The scene object representing the imported data in he internal format used for exchage between modules.
+			/// </summary>
 			public Type.Scene scene;
+
+			/// <summary>
+			/// The name of the file currently imported.
+			/// </summary>
 			public string filename;
+
+			/// <summary>
+			/// The path of the file currently imported.
+			/// </summary>
 			public string path;
+
+			/// <summary>
+			/// The next available ID to use when associating gameobjects with unique IDs.
+			/// </summary>
             public uint id;
 			#endregion
 
 			#region Constructors
+			/// <summary>
+			/// Constructor for context structure.
+			/// </summary>
+			/// <param name="i"></param>
 			public Context(Importer i)
 			{
 				threads = new Pool();
@@ -58,6 +107,9 @@ namespace Armine.Model.Module.Import
 			#endregion
 
 			#region Public methods
+			/// <summary>
+			/// Clean the content of the structure fields to get ready for next import.
+			/// </summary>
 			public void Clean()
 			{
 				filename = null;
@@ -73,7 +125,9 @@ namespace Armine.Model.Module.Import
 		}
 
 		#region Members
-		// Required post processing steps
+		/// <summary>
+		/// Required post processing steps.
+		/// </summary>
 		private const aiPostProcessSteps mandatoryPostProcessSteps =
 			aiPostProcessSteps.aiProcess_ValidateDataStructure | // perform a full validation of the loader's output
 			aiPostProcessSteps.aiProcess_MakeLeftHanded | // set the correct coordinate system for Unity (left handed)
@@ -83,12 +137,16 @@ namespace Armine.Model.Module.Import
 			aiPostProcessSteps.aiProcess_SortByPType | // make 'clean' meshes which consist of a single type of primitives (useful to remove point & line faces)
 			(aiPostProcessSteps) 0;
 
-		// Forbiden post processing steps
+		/// <summary>
+		/// Forbiden post processing steps.
+		/// </summary>
 		private const aiPostProcessSteps forbidenPostProcessSteps =
 			aiPostProcessSteps.aiProcess_FlipUVs |
 			(aiPostProcessSteps) 0;
 
-		// User defined post processing steps
+		/// <summary>
+		/// User defined post processing steps.
+		/// </summary>
 		private aiPostProcessSteps postProcessSteps =
 			//aiPostProcessSteps.aiProcess_PreTransformVertices | // pre-transform vertices into world coordinates
 			//aiPostProcessSteps.aiProcess_CalcTangentSpace | // calculate tangents and bitangents if possible
@@ -113,6 +171,10 @@ namespace Armine.Model.Module.Import
 		#endregion
 
 		#region Constructors
+		/// <summary>
+		/// Constructor of Assimp importer module.
+		/// </summary>
+		/// <param name="importer"></param>
 		public Assimp(Importer importer)
 		{
 			if(loader == null)
@@ -145,6 +207,10 @@ namespace Armine.Model.Module.Import
 			}
 		}
 
+		/// <summary>
+		/// Create a file where to output the  logs of assimp import process.
+		/// </summary>
+		/// <param name="filename">The name of the file wher to write the logs.</param>
 		public void SetLogFile(string filename)
 		{
 			if(!DefaultLogger.isNullLogger())
@@ -217,6 +283,9 @@ namespace Armine.Model.Module.Import
 		//	Dispose(false);
 		//}
 
+		/// <summary>
+		/// Release the ressources used by the importer.
+		/// </summary>
 		public void Dispose()
 		{
 			// Pass true in dispose method to clean managed resources too and say GC to skip finalize in next line.
@@ -229,6 +298,10 @@ namespace Armine.Model.Module.Import
 		#endregion
 
 		#region IImporter implementation
+		/// <summary>
+		/// Provide the list of file extensions supported by this importer module.
+		/// </summary>
+		/// <returns>The list of supported extensions.</returns>
 		public string[] GetSupportedExtensions()
 		{
 			if(extensions == null)
@@ -244,6 +317,13 @@ namespace Armine.Model.Module.Import
 			return extensions;
 		}
 
+		/// <summary>
+		/// Import data asynchronously from a source file.
+		/// </summary>
+		/// <param name="filename">The name of the file to import from.</param>
+		/// <param name="return_callback">The calback used to notify the caller when the import is completed.</param>
+		/// <param name="progress_callback">The callback to regularly notify the caller of the import progress.</param>
+		/// <returns>An iterator to use inside a coroutine.</returns>
 		public IEnumerator ImportFromFile(string filename, ImporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
 			aiPostProcessSteps steps;
@@ -256,6 +336,14 @@ namespace Armine.Model.Module.Import
 			return Type.Scene.FromAssimp(context, Importer, () => Importer.ReadFile(ascii_data, (uint) ascii_data.Length, steps), return_callback, progress_callback);
 		}
 
+		/// <summary>
+		/// Import data asynchronously from a byte array.
+		/// </summary>
+		/// <param name="filename">The name of the file corresponding to the imported data. The extension is used to determine which codec use.</param>
+		/// <param name="data">The data to import from.</param>
+		/// <param name="return_callback">The calback used to notify the caller when the import is completed.</param>
+		/// <param name="progress_callback">The callback to regularly notify the caller of the import progress.</param>
+		/// <returns>An iterator to use inside a coroutine.</returns>
 		public IEnumerator ImportFromBytes(string filename, byte[] data, ImporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
 			aiPostProcessSteps steps;
@@ -322,6 +410,12 @@ namespace Armine.Model.Module.Import
 			return Importer.GetPropertyMatrix(property);
 		}
 
+		/// <summary>
+		/// Get the value of a given property.
+		/// </summary>
+		/// <typeparam name="T">The type of the value te get.</typeparam>
+		/// <param name="property">The name of the property to get.</param>
+		/// <returns>The value of the property.</returns>
 		public T GetProperty<T>(string property)
 		{
 			if(property != null)
@@ -359,6 +453,9 @@ namespace Armine.Model.Module.Import
 		#endregion
 
 		#region Properties setters
+		/// <summary>
+		/// Reset all properties and postprocess steps to the default values.
+		/// </summary>
 		public void ResetToDefaultOptions()
 		{
 			// Reset options to default values
@@ -402,26 +499,51 @@ namespace Armine.Model.Module.Import
 			postProcessSteps = 0;
 		}
 
+		/// <summary>
+		/// Set a int property value.
+		/// </summary>
+		/// <param name="property">The name of the property to set.</param>
+		/// <param name="value">The value of the property to set.</param>
 		public void SetProperty(string property, int value)
 		{
 			Importer.SetPropertyInteger(property, value);
 		}
 
+		/// <summary>
+		/// Set a float property value.
+		/// </summary>
+		/// <param name="property">The name of the property to set.</param>
+		/// <param name="value">The value of the property to set.</param>
 		public void SetProperty(string property, float value)
 		{
 			Importer.SetPropertyFloat(property, value);
 		}
 
+		/// <summary>
+		/// Set a bool property value.
+		/// </summary>
+		/// <param name="property">The name of the property to set.</param>
+		/// <param name="value">The value of the property to set.</param>
 		public void SetProperty(string property, bool value)
 		{
 			Importer.SetPropertyBool(property, value);
 		}
 
+		/// <summary>
+		/// Set a string property value.
+		/// </summary>
+		/// <param name="property">The name of the property to set.</param>
+		/// <param name="value">The value of the property to set.</param>
 		public void SetProperty(string property, string value)
 		{
 			Importer.SetPropertyString(property, value);
 		}
 
+		/// <summary>
+		/// Set a matrix property value.
+		/// </summary>
+		/// <param name="property">The name of the property to set.</param>
+		/// <param name="value">The value of the property to set.</param>
 		public void SetProperty(string property, aiMatrix4x4 value)
 		{
 			Importer.SetPropertyMatrix(property, value);
@@ -429,21 +551,45 @@ namespace Armine.Model.Module.Import
 		#endregion
 
 		#region Flags
+		/// <summary>
+		/// Enable or disable a set of postprocess steps.
+		/// </summary>
+		/// <param name="flags">The postprocess steps to set, as bit flags.</param>
+		/// <param name="state">The desired state for the postprocess steps. True will enable the steps, false will disable them.</param>
 		public void ChangeFlag(aiPostProcessSteps flags, bool state)
 		{
 			postProcessSteps = (aiPostProcessSteps) Option.Flags.Toogle((int) postProcessSteps, (int) flags, state);
 		}
 
+		/// <summary>
+		/// Test if at least one of the postprocess steps in a set is enabled or not.
+		/// </summary>
+		/// <param name="flags">The postprocess steps to check, as bit flags.</param>
+		/// <returns>True if at least one of the postprocess steps is enabled, false otherwise.</returns>
 		public bool IsFlagSet(aiPostProcessSteps flags)
 		{
 			return Option.Flags.IsSet((int) postProcessSteps, (int) flags);
 		}
 
+		/// <summary>
+		/// Compute the actual postprocess steps that will be used for import, including user defined steps, mandatory steps and without forbidden steps.
+		/// </summary>
+		/// <param name="flags">The requested postprocess steps to use, as bit flags.</param>
+		/// <returns>The postprocess steps that will be used, based on requested steps, mandatory steps and without forbidden steps.</returns>
 		public static aiPostProcessSteps UsedSteps(aiPostProcessSteps flags)
 		{
 			return (flags | mandatoryPostProcessSteps) & ~forbidenPostProcessSteps;
 		}
 
+		/// <summary>
+		/// Check if to set of postprocess steps are identical.
+		/// </summary>
+		/// <remarks>
+		/// The postprocess steps are normalized before comparison to take into account the actual steps that would be used on import for both.
+		/// </remarks>
+		/// <param name="flags1">The first set of postprocess steps to compare, as bit flags.</param>
+		/// <param name="flags2">The second set of postprocess steps to compare, as bit flags.</param>
+		/// <returns>True if both set of postprocess steps are equivalent, false otherwise.</returns>
 		public static bool CompareFlags(aiPostProcessSteps flags1, aiPostProcessSteps flags2)
 		{
 			return UsedSteps(flags1) == UsedSteps(flags2);

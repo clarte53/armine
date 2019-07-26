@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace Armine.Model
 {
+	/// <summary>
+	/// Component used to store metadata associated with a given gameobject.
+	/// </summary>
 	[Serializable]
 	public class Metadata : MonoBehaviour, ISerializationCallbackReceiver
 	{
@@ -13,20 +16,31 @@ namespace Armine.Model
 		[NonSerialized]
 		private static readonly DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<string, object>));
 
+		/// <summary>
+		/// Dictionary containing the metadata as key / value pairs.
+		/// </summary>
 		[NonSerialized]
 		public Dictionary<string, object> data;
 
 		[SerializeField]
 		private byte[] serializedData;
-        #endregion
+		#endregion
 
-        public void Initialize()
+		#region Public methods
+		/// <summary>
+		/// Initialize the metadata dictionary.
+		/// </summary>
+		public void Initialize()
         {
             data = new Dictionary<string, object>();
         }
+		#endregion
 
-        #region Serialization callbacks
-        public void OnBeforeSerialize()
+		#region Serialization callbacks
+		/// <summary>
+		/// Callback executed before serialization to prepare data
+		/// </summary>
+		public void OnBeforeSerialize()
 		{
 			serializedData = null;
 
@@ -41,6 +55,9 @@ namespace Armine.Model
 			}
 		}
 
+		/// <summary>
+		/// Callback executed after deserialization to restore data
+		/// </summary>
 		public void OnAfterDeserialize()
 		{
 			data = null;

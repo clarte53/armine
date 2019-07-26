@@ -8,9 +8,11 @@ using UnityEngine;
 //-------------------------------------------------------------------------------
 namespace Armine.Model
 {
-	//-------------------------------------------------------------------------------
-	// Class Exporter
-	//-------------------------------------------------------------------------------
+	/// <summary>
+	/// Exporter class.
+	/// 
+	/// his class register and manage all existing exporter modules.
+	/// </summary>
 	public sealed class Exporter : Module.Manager<Module.IExporter>
 	{
 		#region Members
@@ -18,6 +20,9 @@ namespace Armine.Model
 		#endregion
 
 		#region Constructors
+		/// <summary>
+		/// Constructor of exporter class.
+		/// </summary>
 		public Exporter()
 		{
 			exporting = false;
@@ -31,6 +36,9 @@ namespace Armine.Model
 
 		#region Getter / Setter
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+		/// <summary>
+		/// Get the Assimp exporter.
+		/// </summary>
 		public Module.Export.Assimp Assimp
 		{
 			get
@@ -40,6 +48,9 @@ namespace Armine.Model
 		}
 #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
+		/// <summary>
+		/// Get the binary exporter.
+		/// </summary>
 		public Module.Export.Binary Binary
 		{
 			get
@@ -50,6 +61,12 @@ namespace Armine.Model
 		#endregion
 
 		#region Export
+		/// <summary>
+		/// Export to a file synchronously.
+		/// </summary>
+		/// <param name="root">The root gameobject of the hierarchy to export.</param>
+		/// <param name="filename">The file name and path to export to.</param>
+		/// <returns>True if export is sucessfull, false otherwise.</returns>
 		public bool Export(GameObject root, string filename)
 		{
 			bool result = false;
@@ -61,6 +78,18 @@ namespace Armine.Model
 			return result;
 		}
 
+		/// <summary>
+		/// Export to a file asynchronously.
+		/// </summary>
+		/// <remarks>
+		/// This method must be used as a coroutine. Failure to do so whould result in no export whatsoever. In particular,
+		/// for successful export, the returned iterator must be itered over until it's end.
+		/// </remarks>
+		/// <param name="root">The root gameobject of the hierarchy to export.</param>
+		/// <param name="filename">The file name and path to export to.</param>
+		/// <param name="return_callback">The callback that will be called on export completion.</param>
+		/// <param name="progress_callback">The callback that will be called periodically during export to notify current progress.</param>
+		/// <returns>An iterator to use in a coroutine.</returns>
 		public IEnumerator Export(GameObject root, string filename, Module.ExporterSuccessCallback return_callback, Module.ProgressCallback progress_callback = null)
 		{
 			if(isDisposed)

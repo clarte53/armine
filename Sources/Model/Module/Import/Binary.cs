@@ -2,6 +2,9 @@
 
 namespace Armine.Model.Module.Import
 {
+	/// <summary>
+	/// Binary importer module.
+	/// </summary>
 	public class Binary : IImporter
 	{
 		#region Members
@@ -35,6 +38,9 @@ namespace Armine.Model.Module.Import
 		//	Dispose(false);
 		//}
 
+		/// <summary>
+		/// Release ressources used by the importer.
+		/// </summary>
 		public void Dispose()
 		{
 			// Pass true in dispose method to clean managed resources too and say GC to skip finalize in next line.
@@ -47,16 +53,35 @@ namespace Armine.Model.Module.Import
 		#endregion
 
 		#region IImporter implementation
+		/// <summary>
+		/// Return the list of supported extensions.
+		/// </summary>
+		/// <returns>The list of supported extensions.</returns>
 		public string[] GetSupportedExtensions()
 		{
 			return extensions;
 		}
 
+		/// <summary>
+		/// Import data asynchronously from a source file.
+		/// </summary>
+		/// <param name="filename">The name of the file to import from.</param>
+		/// <param name="return_callback">The calback used to notify the caller when the import is completed.</param>
+		/// <param name="progress_callback">The callback to regularly notify the caller of the import progress.</param>
+		/// <returns>An iterator to use inside a coroutine.</returns>
 		public IEnumerator ImportFromFile(string filename, ImporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
 			return serializer.Deserialize(filename, s => return_callback((Type.Scene) s), p => progress_callback(p));
 		}
 
+		/// <summary>
+		/// Import data asynchronously from a byte array.
+		/// </summary>
+		/// <param name="filename">The name of the file corresponding to the imported data.</param>
+		/// <param name="data">The data to import from.</param>
+		/// <param name="return_callback">The calback used to notify the caller when the import is completed.</param>
+		/// <param name="progress_callback">The callback to regularly notify the caller of the import progress.</param>
+		/// <returns>An iterator to use inside a coroutine.</returns>
 		public IEnumerator ImportFromBytes(string filename, byte[] data, ImporterReturnCallback return_callback, ProgressCallback progress_callback)
 		{
 			return serializer.Deserialize(data, s => return_callback((Type.Scene) s), p => progress_callback(p));

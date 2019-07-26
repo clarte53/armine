@@ -10,6 +10,9 @@ namespace Armine.Model.Module
 	public delegate void ProgressCallback(float percentage);
 	#endregion
 
+	/// <summary>
+	/// Buse class of all modules.
+	/// </summary>
 	public interface IModule : IDisposable
 	{
 		/// <summary>

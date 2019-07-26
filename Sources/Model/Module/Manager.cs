@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace Armine.Model.Module
 {
+	/// <summary>
+	/// Base class for classes managing a set of IModule.
+	/// </summary>
+	/// <typeparam name="T">The type of IModule to manage.</typeparam>
 	public class Manager<T> : IDisposable where T : IModule
 	{
 		#region Members
@@ -12,6 +16,9 @@ namespace Armine.Model.Module
 		#endregion
 
 		#region Constructors
+		/// <summary>
+		/// Constructor of manager base class.
+		/// </summary>
 		public Manager()
 		{
 			isDisposed = false;
@@ -55,6 +62,9 @@ namespace Armine.Model.Module
 		//	Dispose(false);
 		//}
 
+		/// <summary>
+		/// Dispose method to release allocated ressources.
+		/// </summary>
 		public void Dispose()
 		{
 			// Pass true in dispose method to clean managed resources too and say GC to skip finalize in next line.
@@ -67,6 +77,9 @@ namespace Armine.Model.Module
 		#endregion
 
 		#region Getter / Setter
+		/// <summary>
+		/// Returns the list of file extensions supported by this instance, as a set of the supported extensions of the loaded modules.
+		/// </summary>
 		public string[] SupportedExtensions
 		{
 			get
@@ -86,6 +99,11 @@ namespace Armine.Model.Module
 		#endregion
 
 		#region Modules handling
+		/// <summary>
+		/// Add a new module.
+		/// </summary>
+		/// <param name="name">The name to reference the module with.</param>
+		/// <param name="module">The module to add.</param>
 		public void AddModule(string name, T module)
 		{
 			if(isDisposed)
@@ -109,6 +127,11 @@ namespace Armine.Model.Module
 			}
 		}
 
+		/// <summary>
+		/// Get a registered module.
+		/// </summary>
+		/// <param name="name">The name the module is referenced with.</param>
+		/// <returns>The given module, or null if the module does not exist.</returns>
 		public T GetModule(string name)
 		{
 			if(isDisposed)

@@ -10,6 +10,9 @@ namespace Armine.Model.Module
 	public delegate void ImporterReturnCallback(Type.Scene scene);
 	#endregion
 
+	/// <summary>
+	/// Base class of all import modules.
+	/// </summary>
 	public interface IImporter : IModule
 	{
 		/// <summary>

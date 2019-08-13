@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Armine.Shaders;
 using ICSharpCode.SharpZipLib.Zip;
 using UnityEditor;
@@ -198,7 +199,7 @@ namespace Armine.Editor.Tools
 
 			if(File.Exists(file))
 			{
-				CLARTE.Threads.Result result = CLARTE.Threads.Tasks.Add(() =>
+				Task result = Task.Run(() =>
 				{
 					try
 					{
@@ -249,7 +250,7 @@ namespace Armine.Editor.Tools
 					}
 				});
 
-				while(!result.Done)
+				while(!result.IsCompleted)
 				{
 					yield return null;
 				}

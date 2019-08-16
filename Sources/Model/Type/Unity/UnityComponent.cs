@@ -35,8 +35,6 @@ namespace Armine.Model.Type
 
                 PropertyInfo[] class_properties = type.GetProperties(flags);
 
-                bool has_shared_material_properties = class_properties.Any(p => p.Name.StartsWith("sharedMaterial"));
-
                 foreach(PropertyInfo property in class_properties)
                 {
                     if(property.GetIndexParameters().Length == 0)
@@ -46,9 +44,15 @@ namespace Armine.Model.Type
 
                         if(DoSerialization(property, () => DoSerialization(getter) && DoSerialization(setter)))
                         {
-                            int size = property.Name.Length;
+							bool is_material(string key_name, string property_name)
+							{
+								int key_size = key_name.Length;
+								int property_size = property_name.Length;
 
-                            if(!has_shared_material_properties || !(property.Name.StartsWith("material") && (size == 8 || (size == 9 && property.Name[8] == 's'))))
+								return property_name.StartsWith(key_name) && (property_size == key_size || (property_size == key_size + 1 && property_name[key_size] == 's'));
+							}
+
+							if(!is_material("sharedMaterial", property.Name) && !is_material("material", property.Name))
                             {
                                 AddValue(scene, properties, type, property.PropertyType, property.Name, property.GetValue(component, null));
                             }

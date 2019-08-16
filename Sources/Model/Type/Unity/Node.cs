@@ -178,7 +178,7 @@ namespace Armine.Model.Type
         {
             System.Type type = component.GetType();
 
-            return !typeof(Transform).IsAssignableFrom(type) && !typeof(MeshFilter).IsAssignableFrom(type) && !typeof(MeshRenderer).IsAssignableFrom(type);
+            return !typeof(Transform).IsAssignableFrom(type) && !typeof(MeshFilter).IsAssignableFrom(type);
         }
 
 		private static void FromUnityMeshAndMaterials(Scene scene, Transform node, ref List<GraphicMesh> graphic_meshes)

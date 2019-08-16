@@ -27,10 +27,7 @@ namespace Armine.Model.Type
 
 				if(properties != null && properties.bytes.Length > 0)
 				{
-					IEnumerator it = Module.Import.Binary.serializer.Deserialize(properties.bytes, p => shadersProperties = (Dictionary<int, string[]>) p);
-
-					while(it.MoveNext())
-					{ }
+					shadersProperties = (Dictionary<int, string[]>) Module.Import.Binary.serializer.Deserialize(properties.bytes);
 				}
 			}
 

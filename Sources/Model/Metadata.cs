@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
 using UnityEngine;
+using CLARTE.Serialization;
 
 namespace Armine.Model
 {
@@ -10,12 +9,9 @@ namespace Armine.Model
 	/// Component used to store metadata associated with a given gameobject.
 	/// </summary>
 	[Serializable]
-	public class Metadata : MonoBehaviour, ISerializationCallbackReceiver
+	public class Metadata : MonoBehaviour, IBinarySerializable, ISerializationCallbackReceiver
 	{
 		#region Members
-		[NonSerialized]
-		private static readonly DataContractSerializer serializer = new DataContractSerializer(typeof(Dictionary<string, object>));
-
 		/// <summary>
 		/// Dictionary containing the metadata as key / value pairs.
 		/// </summary>
@@ -36,7 +32,33 @@ namespace Armine.Model
         }
 		#endregion
 
-		#region Serialization callbacks
+		#region IBinarySerializable implementation
+		/// <summary>
+		/// Deserialize data from byte array.
+		/// </summary>
+		/// <param name="serializer">Serializer to use.</param>
+		/// <param name="buffer">Buffer to get the data from.</param>
+		/// <param name="start">Start offset in the buffer where to get the data.</param>
+		/// <returns></returns>
+		public uint FromBytes(Binary serializer, Binary.Buffer buffer, uint start)
+		{
+			return serializer.FromBytes(buffer, start, out data);
+		}
+
+		/// <summary>
+		/// Serialize data to a byte array.
+		/// </summary>
+		/// <param name="serializer">Serializer to use.</param>
+		/// <param name="buffer">Buffer where to serialaze the data.</param>
+		/// <param name="start">Start offset where to put the serialized data in the buffer.</param>
+		/// <returns></returns>
+		public uint ToBytes(Binary serializer, ref Binary.Buffer buffer, uint start)
+		{
+			return serializer.ToBytes(ref buffer, start, data);
+		}
+		#endregion
+
+		#region ISerializationCallbackReceiver implementation
 		/// <summary>
 		/// Callback executed before serialization to prepare data
 		/// </summary>
@@ -46,12 +68,7 @@ namespace Armine.Model
 
 			if(data != null)
 			{
-				using(MemoryStream stream = new MemoryStream())
-				{
-					serializer.WriteObject(stream, data);
-
-					serializedData = stream.ToArray();
-				}
+				serializedData = Module.Import.Binary.serializer.Serialize(data);
 			}
 		}
 
@@ -60,15 +77,12 @@ namespace Armine.Model
 		/// </summary>
 		public void OnAfterDeserialize()
 		{
-			data = null;
-
 			if(serializedData != null && serializedData.Length > 0)
 			{
-				using(MemoryStream stream = new MemoryStream(serializedData))
-				{
-					data = (Dictionary<string, object>) serializer.ReadObject(stream);
-				}
+				data = (Dictionary<string, object>) Module.Import.Binary.serializer.Deserialize(serializedData);
 			}
+
+			serializedData = null;
 		}
 		#endregion
 	}

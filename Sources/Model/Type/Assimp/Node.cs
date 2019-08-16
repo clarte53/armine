@@ -26,7 +26,12 @@ namespace Armine.Model.Type
 			// Get node metadata
 			using(aiMetadata meta = assimp_node.mMetaData)
 			{
-				node.metadata = Metadata.FromAssimp(context, meta);
+				UnityComponent metadata = UnityComponent.FromAssimpMetadata(meta);
+
+				if(metadata != null)
+				{
+					node.components = new UnityComponent[] { metadata };
+				}
 			}
 
 			// Parse children recursively
@@ -245,13 +250,18 @@ namespace Armine.Model.Type
 			}
 			
 			// Parse the node metadata
-			if(metadata != null)
+			if(components != null)
 			{
-				aiMetadata assimp_meta = metadata.ToAssimp();
-
-				if(assimp_meta != null)
+				foreach(UnityComponent component in components)
 				{
-					node_object.mMetaData = assimp_meta.Unmanaged();
+					aiMetadata assimp_meta = component.ToAssimpMetadata();
+
+					if(assimp_meta != null)
+					{
+						node_object.mMetaData = assimp_meta.Unmanaged();
+
+						break;
+					}
 				}
 			}
 

@@ -20,7 +20,7 @@ namespace Armine.Model.Type
         private partial class BackendBinarySerializable : IBackend
         {
             #region Members
-            private byte[] serialized;
+            public byte[] serialized;
             #endregion
         }
 

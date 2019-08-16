@@ -23,7 +23,6 @@ namespace Armine.Model.Type
 		private Node[] children = null;
 		private GraphicMesh[] meshes = null;
         private UnityComponent[] components = null;
-		private Metadata metadata = null;
 		#endregion
 
 		#region Getter / Setter

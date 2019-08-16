@@ -173,25 +173,7 @@ namespace Armine.Model.Type
             #region Import
             public void FromUnity(Scene scene, Component component, System.Type type)
             {
-                Binary.Buffer buffer = null;
-
-                try
-                {
-                    buffer = Module.Import.Binary.serializer.GetBuffer(1024);
-
-                    uint written = Module.Import.Binary.serializer.ToBytes(ref buffer, 0, component as IBinarySerializable);
-
-                    serialized = new byte[written];
-
-                    Array.Copy(buffer.Data, serialized, written);
-                }
-                finally
-                {
-                    if(buffer != null)
-                    {
-                        buffer.Dispose();
-                    }
-                }
+				serialized = Module.Import.Binary.serializer.Serialize(component as IBinarySerializable);
             }
             #endregion
 

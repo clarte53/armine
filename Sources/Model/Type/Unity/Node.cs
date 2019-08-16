@@ -42,7 +42,6 @@ namespace Armine.Model.Type
 				current.position = node.localPosition;
 				current.rotation = node.localRotation;
 				current.scale = node.localScale;
-				current.metadata = Metadata.FromUnity(node.gameObject);
 
                 // Update mapping
                 scene.IdMapping.Add(node.gameObject, current.id);
@@ -179,7 +178,7 @@ namespace Armine.Model.Type
         {
             System.Type type = component.GetType();
 
-            return !typeof(Transform).IsAssignableFrom(type) && !typeof(MeshFilter).IsAssignableFrom(type) && !typeof(MeshRenderer).IsAssignableFrom(type) && !typeof(Model.Metadata).IsAssignableFrom(type);
+            return !typeof(Transform).IsAssignableFrom(type) && !typeof(MeshFilter).IsAssignableFrom(type) && !typeof(MeshRenderer).IsAssignableFrom(type);
         }
 
 		private static void FromUnityMeshAndMaterials(Scene scene, Transform node, ref List<GraphicMesh> graphic_meshes)
@@ -366,12 +365,6 @@ namespace Armine.Model.Type
 			go.transform.localRotation = rotation;
 			go.transform.localScale = scale;
 
-			// Add metadata info if present
-			if(metadata != null)
-			{
-				metadata.ToUnity(go);
-			}
-
             // Add components
             if(components != null && components.Length > 0)
             {
@@ -391,15 +384,6 @@ namespace Armine.Model.Type
 			Binary.Buffer buffer = Module.Import.Binary.serializer.GetBuffer(5 * 1024); // Start with 5 Ko buffer
 
 			uint written = 0;
-
-			Metadata meta = Metadata.FromUnity(trans.gameObject);
-
-			if(meta != null)
-			{
-				written += Module.Import.Binary.serializer.ToBytes(ref buffer, written, meta);
-			}
-			// No need to add something to know wether meta is defined or not: the data will never
-			// be deserialized. It's only function is to serve to compute the comparison hash.
 
             foreach(Component component in trans.GetComponents<Component>())
             {

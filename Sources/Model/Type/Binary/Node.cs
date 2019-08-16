@@ -26,7 +26,6 @@ namespace Armine.Model.Type
 		public uint FromBytes(Binary serializer, Binary.Buffer buffer, uint start)
 		{
 			int hide_flags;
-            IBinarySerializable meta;
 
 			uint read = serializer.FromBytes(buffer, start, out id);
             read += serializer.FromBytes(buffer, start + read, out name);
@@ -40,10 +39,8 @@ namespace Armine.Model.Type
 			read += serializer.FromBytes(buffer, start + read, out children);
 			read += serializer.FromBytes(buffer, start + read, out meshes);
             read += serializer.FromBytes(buffer, start + read, out components);
-            read += serializer.FromBytes(buffer, start + read, out meta);
 
 			hideFlags = (UnityEngine.HideFlags) hide_flags;
-            metadata = (Metadata) meta;
 
 			return read;
 		}
@@ -62,7 +59,6 @@ namespace Armine.Model.Type
 			written += serializer.ToBytes(ref buffer, start + written, children);
 			written += serializer.ToBytes(ref buffer, start + written, meshes);
             written += serializer.ToBytes(ref buffer, start + written, components);
-            written += serializer.ToBytes(ref buffer, start + written, metadata);
 
 			return written;
 		}

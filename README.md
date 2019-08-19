@@ -1,16 +1,16 @@
 Armine
 ===============
 
-3D file import/export module for Unity based on Assimp (https://github.com/assimp/assimp)
+3D file import/export module for Unity based on Assimp (https://github.com/assimp/assimp).
 Depends on [clarte-utils](ssh://git@gitlab.clarte.asso.fr:53000/modules/clarte-utils.git "clarte-utils")
 module (GitHub url will be added soon for external reference).
 
-Armine can be described as a 3D model data import / export hub between multiple
-sources. The sources included by default are Unity engine, a serialized binary
+Armine is a 3D model data import / export hub between multiple sources.
+The sources included by default are Unity engine, a serialized binary
 version of unity scenes and the librairy Assimp that can load multiple 3D models
 formats.
 
-Loading is desgned to be asynchronous and use multiple CPU cores as much as
+Loading is designed to be asynchronous and use multiple CPU cores as much as
 possible to speed up the loading process.
 
 Usage
@@ -25,8 +25,7 @@ using UnityEngine;
 
 public class Load : MonoBehaviour
 {
-	[SerializeField]
-	string filename = "c:\\model.obj";
+	public string filename = "c:\\model.obj";
 
 	private Importer importer;
 
@@ -106,7 +105,7 @@ importer.Assimp.ChangeFlag(Assimp.aiPostProcessSteps.aiProcess_RemoveComponent, 
 Architecture
 ===============
 
-Armine is designed to import and export 3D models files from multiple sources.
+Armine is designed to import and export 3D models files from / to multiple sources.
 As such, to simplify the interdependancies between the sources, Armine is
 designed primarily as a hub between multiple plugins (sources), with a common
 intermediary format as the exchange protocol between the plugins.

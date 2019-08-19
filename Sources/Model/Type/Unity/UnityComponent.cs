@@ -177,8 +177,35 @@ namespace Armine.Model.Type
             #region Import
             public void FromUnity(Scene scene, Component component, System.Type type)
             {
-				serialized = Module.Import.Binary.serializer.Serialize(component as IBinarySerializable);
-            }
+				// We can not use the 'Serialize' high level method directly as deserialization will require
+				// the use of explicit low level 'FromBytesOverwrite'. Therefore, we must do things manually here.
+
+				Binary serializer = Module.Import.Binary.serializer;
+
+				Binary.Buffer buffer = null;
+
+				try
+				{
+					buffer = serializer.GetBuffer(Binary.defaultSerializationBufferSize);
+
+					uint written = serializer.ToBytes(ref buffer, 0, component as IBinarySerializable);
+
+					serialized = new byte[written];
+
+					Array.Copy(buffer.Data, serialized, written);
+				}
+				catch(Exception e)
+				{
+					throw new Binary.SerializationException("An error occured during serialization.", e);
+				}
+				finally
+				{
+					if(buffer != null)
+					{
+						buffer.Dispose();
+					}
+				}
+			}
             #endregion
 
             #region Export

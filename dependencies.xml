@@ -4,7 +4,7 @@
 	<dependencies>
 		<DependencyDesc>
 			<address>ssh://git@gitlab.clarte.asso.fr:53000/modules/clarte-utils.git</address>
-			<commitId>eeb0e10e2244836be0a24cda28a32c591653496c</commitId>
+			<commitId>45bf46d381fc244eb7fe2a77fdb052f2122336e0</commitId>
 		</DependencyDesc>
 	</dependencies>
 </DependenciesList>

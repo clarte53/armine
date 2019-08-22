@@ -394,8 +394,8 @@ namespace Armine.Model.Type
             }
 
 			uint size = (uint) System.Text.Encoding.UTF8.GetByteCount(name);
-			size += 2 * Binary.Size(Binary.SupportedTypes.VECTOR3);
-			size += Binary.Size(Binary.SupportedTypes.QUATERNION);
+			size += 2 * Binary.Size(Binary.SupportedTypes.UNITY_VECTOR3);
+			size += Binary.Size(Binary.SupportedTypes.UNITY_QUATERNION);
 
 			Module.Import.Binary.serializer.ResizeBuffer(ref buffer, written + size);
 

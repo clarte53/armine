@@ -3,8 +3,8 @@
 	<name>armine</name>
 	<dependencies>
 		<DependencyDesc>
-			<address>ssh://git@gitlab.clarte.asso.fr:53000/modules/clarte-utils.git</address>
-			<commitId>45bf46d381fc244eb7fe2a77fdb052f2122336e0</commitId>
+			<address>https://github.com/clarte53/armine.git</address>
+			<commitId>9c8acac0c91e66d9a20ff1207ab8ea1a50a5b8f3</commitId>
 		</DependencyDesc>
 	</dependencies>
 </DependenciesList>

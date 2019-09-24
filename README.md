@@ -2,8 +2,8 @@ Armine
 ===============
 
 3D file import/export module for Unity based on Assimp (https://github.com/assimp/assimp).
-Depends on [clarte-utils](ssh://git@gitlab.clarte.asso.fr:53000/modules/clarte-utils.git "clarte-utils")
-module (GitHub url will be added soon for external reference).
+Depends on [clarte-utils](https://github.com/clarte53/armine.git "clarte-utils")
+module.
 
 Armine is a 3D model data import / export hub between multiple sources.
 The sources included by default are Unity engine, a serialized binary
@@ -12,6 +12,19 @@ formats.
 
 Loading is designed to be asynchronous and use multiple CPU cores as much as
 possible to speed up the loading process.
+
+Getting started
+===============
+
+First, this repository as well as [clarte-utils](https://github.com/clarte53/armine.git "clarte-utils")
+repository must be added to your Unity project as submodules inside the
+"Assets" directory. The required commit hash of the clarte-utils repository can
+be found in the file "dependencies.xml". 
+
+This repository was not added as a submodule itself to avoid problems of
+multiple submodules each using their own version of clarte-utils as submodule.
+Therefore, the task to maintain coherency between armine and clarte-utils
+repositories is left to the developpers.
 
 Usage
 ===============

@@ -3,7 +3,7 @@
 	<name>armine</name>
 	<dependencies>
 		<DependencyDesc>
-			<address>https://github.com/clarte53/armine.git</address>
+			<address>https://github.com/clarte53/clarte-utils.git</address>
 			<commitId>9c8acac0c91e66d9a20ff1207ab8ea1a50a5b8f3</commitId>
 		</DependencyDesc>
 	</dependencies>
